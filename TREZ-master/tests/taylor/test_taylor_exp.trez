@@ -1,0 +1,80 @@
+// ============================================================
+// EJERCICIO: Polinomio de Taylor para e^x
+// ============================================================
+// Fórmula:
+//     e^x ≈ Σ_{n=0}^{N-1}  x^n / n!
+//          = 1 + x + x^2/2! + x^3/3! + x^4/4! + ...
+//
+// Implementación 100% TREZ — sin dependencias externas.
+// Usa pow() y factorial() nativos (Mathdoz) y se valida
+// contra la implementación exp() basada en serie de Maclaurin.
+// ============================================================
+
+mostrar("=== Polinomio de Taylor para e^x ===");
+
+// ── Función reutilizable: aproxima e^x con N términos ────────────────
+func taylor_exp(x, N) {
+    let suma = 0.0;
+    for n in range(N) {
+        let suma = suma + (pow(x, n) / factorial(n));
+    }
+    return suma;
+}
+
+// ── Caso 1: x = 1 → debe converger a E (≈ 2.71828...) ────────────────
+mostrar("--- Caso 1: x = 1, N = 10 términos ---");
+let aprox_1 = taylor_exp(1, 10);
+mostrar("Aproximación Taylor:");
+mostrar(aprox_1);
+mostrar("exp(1) nativo:");
+mostrar(exp(1));
+mostrar("Constante E:");
+mostrar(E);
+mostrar("Error absoluto:");
+mostrar(abs(aprox_1 - exp(1)));
+
+// ── Caso 2: x = 2 → e^2 ≈ 7.389056... ────────────────────────────────
+mostrar("--- Caso 2: x = 2, N = 15 términos ---");
+let aprox_2 = taylor_exp(2, 15);
+mostrar("Aproximación Taylor:");
+mostrar(aprox_2);
+mostrar("exp(2) nativo:");
+mostrar(exp(2));
+mostrar("Error absoluto:");
+mostrar(abs(aprox_2 - exp(2)));
+
+// ── Caso 3: x = 0 → caso base, debe ser exactamente 1 ────────────────
+mostrar("--- Caso 3: x = 0 (caso base) ---");
+mostrar("Taylor (debe ser 1):");
+mostrar(taylor_exp(0, 5));
+
+// ── Caso 4: x = -1 → debe dar 1/e ≈ 0.3678... ────────────────────────
+mostrar("--- Caso 4: x = -1, N = 12 términos ---");
+let aprox_neg = taylor_exp(-1, 12);
+mostrar("Aproximación Taylor:");
+mostrar(aprox_neg);
+mostrar("exp(-1) nativo:");
+mostrar(exp(-1));
+mostrar("Error absoluto:");
+mostrar(abs(aprox_neg - exp(-1)));
+
+// ── Caso 5: convergencia paso a paso para x = 1 ──────────────────────
+//        Cada fila muestra [N_términos, aproximación, error_vs_E]
+mostrar("--- Caso 5: convergencia para x = 1 (N = 1..8) ---");
+for k in range(1, 9) {
+    let aprox = taylor_exp(1, k);
+    let err = abs(aprox - E);
+    mostrar([k, aprox, err]);
+}
+
+// ── Caso 6: vía namespace Mathdoz ────────────────────────────────────
+mostrar("--- Caso 6: Mathdoz.exp(3) vs Taylor manual ---");
+let aprox_3 = taylor_exp(3, 20);
+mostrar("Taylor x=3, N=20:");
+mostrar(aprox_3);
+mostrar("Mathdoz.exp(3):");
+mostrar(Mathdoz.exp(3));
+mostrar("Error:");
+mostrar(abs(aprox_3 - Mathdoz.exp(3)));
+
+mostrar("=== Fin del ejercicio ===");

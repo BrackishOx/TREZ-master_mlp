@@ -1,0 +1,43 @@
+// test_math.trez — librería matemática nativa (Mathdoz)
+// Todas las funciones implementadas en Python puro, sin math de Python.
+
+// ── Constantes ────────────────────────────────────────────────────────────
+mostrar(PI);   // 3.141592653589793
+mostrar(E);    // 2.718281828459045
+
+// ── Funciones algebraicas — llamada global ────────────────────────────────
+mostrar(abs(-45.5));    // 45.5
+mostrar(sqrt(16));      // 4.0  — Newton-Raphson
+mostrar(pow(2, 8));     // 256.0
+mostrar(factorial(5));  // 120
+mostrar(factorial(10)); // 3628800
+
+// ── Via namespace Mathdoz ─────────────────────────────────────────────────
+mostrar(Mathdoz.abs(-7.5));     // 7.5
+mostrar(Mathdoz.sqrt(2));       // 1.4142135623730951
+mostrar(Mathdoz.pow(3, 4));     // 81.0
+mostrar(Mathdoz.factorial(6));  // 720
+
+// ── Series de Taylor / Maclaurin ──────────────────────────────────────────
+mostrar(exp(1));         // 2.718281828459045
+mostrar(Mathdoz.exp(2)); // 7.38905609893065
+mostrar(log(E));         // 1.0  — ln(e) = 1
+mostrar(Mathdoz.log(1)); // 0.0  — ln(1) = 0
+mostrar(sin(PI));        // ~0.0 — serie Taylor, aprox 0
+mostrar(cos(PI));        // -1.0
+mostrar(Mathdoz.sin(0)); // 0.0
+mostrar(Mathdoz.cos(0)); // 1.0
+
+// ── Activaciones (funciones ML) ───────────────────────────────────────────
+mostrar(relu(-3));           // 0
+mostrar(relu(5));            // 5
+mostrar(sigmoid(0));         // 0.5
+mostrar(Mathdoz.relu(-1));   // 0
+mostrar(Mathdoz.sigmoid(0)); // 0.5
+
+// ── Operaciones sobre listas con math ─────────────────────────────────────
+let v = [1.0, 4.0, 9.0];
+for x in v {
+    mostrar(sqrt(x));
+}
+// 1.0  2.0  3.0

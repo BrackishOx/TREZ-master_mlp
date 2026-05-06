@@ -1,0 +1,72 @@
+// test_metricsdoz.trez — métricas y funciones de pérdida (Metricsdoz)
+
+// ── MSE — Error Cuadrático Medio ──────────────────────────────────────────
+let y_real = [0.0, 1.0, 0.5];
+let y_pred = [0.1, 0.9, 0.4];
+
+let loss_mse = Metricsdoz.mse(y_real, y_pred);
+mostrar(loss_mse);   // 0.009999999999999997
+
+// Caso perfecto: predicción exacta
+mostrar(Metricsdoz.mse([1.0, 2.0], [1.0, 2.0]));  // 0.0
+
+// Caso escalar
+mostrar(mse(0.0, 1.0));  // 1.0
+
+// ── MSE Gradiente ─────────────────────────────────────────────────────────
+let grad = Metricsdoz.mse_grad(y_real, y_pred);
+mostrar(len(grad));     // 3
+mostrar(grad[0] > 0);  // True  (pred > real => grad positivo)
+mostrar(grad[1] < 0);  // True  (pred < real => grad negativo)
+
+// Verificar fórmula: 2*(pred-real)/N
+// grad[0] = 2*(0.1-0.0)/3 = 0.0666...
+mostrar(grad[0] > 0.06);  // True
+mostrar(grad[0] < 0.07);  // True
+
+// ── Cross Entropy — entropía cruzada ──────────────────────────────────────
+// logits: salidas crudas de la red (pre-softmax)
+// targets: índice de la clase correcta por muestra
+let logits  = [[2.0, 1.0, 0.1], [0.5, 2.5, 0.3]];
+let targets = [0, 1];
+
+let ce = Metricsdoz.cross_entropy(logits, targets);
+mostrar(ce > 0.0);    // True  (pérdida siempre positiva)
+mostrar(ce < 1.0);    // True  (logits favorecen las clases correctas)
+
+// Predicción perfecta: logit de clase correcta >> demás
+let logits_perfecto = [[10.0, 0.0], [0.0, 10.0]];
+let ce_perfecto = Metricsdoz.cross_entropy(logits_perfecto, [0, 1]);
+mostrar(ce_perfecto < 0.001);  // True — pérdida casi 0
+
+// Predicción pésima: logit de clase correcta << demás
+let logits_malo = [[-5.0, 5.0], [5.0, -5.0]];
+let ce_malo = Metricsdoz.cross_entropy(logits_malo, [0, 1]);
+mostrar(ce_malo > 5.0);  // True — pérdida muy alta
+
+// ── Cross Entropy Grad ────────────────────────────────────────────────────
+let ce_grad = Metricsdoz.cross_entropy_grad(logits, targets);
+mostrar(len(ce_grad));      // 2  (batch size)
+mostrar(len(ce_grad[0]));   // 3  (número de clases)
+
+// El gradiente de la clase correcta debe ser negativo (softmax - 1)
+// El gradiente de las otras clases debe ser positivo (softmax)
+mostrar(ce_grad[0][0] < 0);  // True — clase 0 es correcta para muestra 0
+mostrar(ce_grad[0][1] > 0);  // True — clase 1 es incorrecta
+
+// ── Uso en ciclo de entrenamiento ─────────────────────────────────────────
+// Simula mini-batch con actualización manual
+let lr = 0.1;
+let log1 = [[1.0, 0.0, 0.0]];
+let tgt1 = [0];
+
+let loss1 = Metricsdoz.cross_entropy(log1, tgt1);
+let grad1 = Metricsdoz.cross_entropy_grad(log1, tgt1);
+
+// Actualizar logits un paso
+let log2 = [log1[0][0] - lr * grad1[0][0],
+            log1[0][1] - lr * grad1[0][1],
+            log1[0][2] - lr * grad1[0][2]];
+
+let loss2 = Metricsdoz.cross_entropy([log2], tgt1);
+mostrar(loss2 < loss1);  // True — la pérdida bajó tras una actualización

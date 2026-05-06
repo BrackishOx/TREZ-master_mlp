@@ -1,0 +1,64 @@
+// test_optimdoz.trez — optimizadores SGD y Adam (Optimdoz)
+
+// ── SGD básico — actualización de un paso ─────────────────────────────────
+// params y grads son listas de tensores (listas de números)
+let params = [[0.5, 0.3], [0.1]];
+let grads  = [[0.1, 0.2], [0.05]];
+
+// SGD: param_nuevo = param - lr * grad
+let p_sgd = Optimdoz.sgd(params, grads, 0.1);
+mostrar(p_sgd[0][0]);  // 0.5 - 0.1*0.1 = 0.49
+mostrar(p_sgd[0][1]);  // 0.3 - 0.1*0.2 = 0.28
+mostrar(p_sgd[1][0]);  // 0.1 - 0.1*0.05 = 0.095
+
+// SGD con lr distinto
+let p_sgd2 = Optimdoz.sgd(params, grads, 0.01);
+mostrar(p_sgd2[0][0]);  // 0.5 - 0.01*0.1 = 0.499
+mostrar(p_sgd2[1][0]);  // 0.1 - 0.01*0.05 = 0.0995
+
+// ── zeros_like — inicialización de momentos ───────────────────────────────
+let zeros = Optimdoz.zeros_like(params);
+mostrar(zeros[0][0]);  // 0.0
+mostrar(zeros[0][1]);  // 0.0
+mostrar(zeros[1][0]);  // 0.0
+
+// ── Adam — un paso completo ───────────────────────────────────────────────
+// Retorna [params_new, m_new, v_new]
+let m = Optimdoz.zeros_like(params);
+let v = Optimdoz.zeros_like(params);
+let t = 1;
+
+let adam_result = Optimdoz.adam(params, grads, m, v, t, 0.001);
+let params_new = adam_result[0];
+let m_new      = adam_result[1];
+let v_new      = adam_result[2];
+
+// Con lr=0.001 y t=1, cada param se mueve ~0.001
+mostrar(params_new[0][0] < 0.5);   // True  (bajó)
+mostrar(params_new[0][1] < 0.3);   // True  (bajó)
+mostrar(params_new[1][0] < 0.1);   // True  (bajó)
+
+// m_new debe ser distinto de cero (estimador de primer momento)
+mostrar(m_new[0][0] > 0.0);   // True
+mostrar(v_new[0][0] > 0.0);   // True
+
+// ── Adam — varios pasos (t crece) ────────────────────────────────────────
+let m2 = m_new;
+let v2 = v_new;
+let p2 = params_new;
+
+let adam2 = Optimdoz.adam(p2, grads, m2, v2, 2, 0.001);
+let p3    = adam2[0];
+
+// Después de 2 pasos, parámetros siguen bajando
+mostrar(p3[0][0] < params_new[0][0]);  // True
+mostrar(p3[1][0] < params_new[1][0]);  // True
+
+// ── SGD en pipeline de entrenamiento manual ───────────────────────────────
+// Simula un paso de backprop: loss -> grad -> update
+let W  = [[1.0, 0.0], [0.0, 1.0]];   // identidad
+let gW = [[0.1, 0.1], [0.1, 0.1]];   // gradiente uniforme
+
+let W_nuevo = Optimdoz.sgd([W], [gW], 0.5)[0];
+mostrar(W_nuevo[0][0]);  // 1.0 - 0.5*0.1 = 0.95
+mostrar(W_nuevo[1][1]);  // 1.0 - 0.5*0.1 = 0.95

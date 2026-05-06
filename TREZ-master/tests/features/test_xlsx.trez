@@ -1,0 +1,134 @@
+// test_xlsx.trez — Lectura y visualización de data.xlsx con Datadoz y Plotdoz
+// Dataset: id, edad, nivel_edu, ingreso_mensual, sex, anios_esc (10280 registros)
+
+// ── 1. Cargar el archivo Excel ────────────────────────────────────────────────
+let datos = Datadoz.read_xlsx("../tests/data.xlsx");
+
+mostrar("Filas cargadas:");
+mostrar(Datadoz.num_filas(datos));       // 10280
+
+mostrar("Columnas:");
+mostrar(Datadoz.columnas(datos));        // [id, edad, nivel_edu, ingreso_mensual, sex, anios_esc]
+
+mostrar("Num columnas:");
+mostrar(Datadoz.num_columnas(datos));    // 6
+
+// ── 2. Exploración básica ─────────────────────────────────────────────────────
+let primera_fila = Datadoz.fila(datos, 0);
+mostrar("Primera fila:");
+mostrar(primera_fila);
+
+// ── 3. Extraer columnas numéricas ─────────────────────────────────────────────
+let edades    = Datadoz.columna(datos, "edad");
+let ingresos  = Datadoz.columna(datos, "ingreso_mensual");
+
+mostrar("Total personas:");
+mostrar(len(edades));   // 10280
+
+// Media de edades
+let suma_edad = 0;
+for e in edades {
+    let suma_edad = suma_edad + e;
+}
+let media_edad = suma_edad / len(edades);
+mostrar("Media de edad:");
+mostrar(media_edad);
+
+// Media de ingresos
+let suma_ing = 0;
+for i in ingresos {
+    let suma_ing = suma_ing + i;
+}
+let media_ing = suma_ing / len(ingresos);
+mostrar("Media ingreso mensual:");
+mostrar(media_ing);
+
+// ── 4. Conteo por nivel educativo ─────────────────────────────────────────────
+let niveles = Datadoz.columna(datos, "nivel_edu");
+
+let cnt_primaria_inc  = 0;
+let cnt_primaria_comp = 0;
+let cnt_secundaria    = 0;
+let cnt_superior      = 0;
+
+for niv in niveles {
+    if (niv == "Primaria incompleta") {
+        let cnt_primaria_inc = cnt_primaria_inc + 1;
+    }
+    if (niv == "Prrimaria completa") {
+        let cnt_primaria_comp = cnt_primaria_comp + 1;
+    }
+    if (niv == "Secundaria completa") {
+        let cnt_secundaria = cnt_secundaria + 1;
+    }
+    if (niv == "Medio superior y superior") {
+        let cnt_superior = cnt_superior + 1;
+    }
+}
+
+mostrar("Primaria incompleta:");
+mostrar(cnt_primaria_inc);
+mostrar("Primaria completa:");
+mostrar(cnt_primaria_comp);
+mostrar("Secundaria completa:");
+mostrar(cnt_secundaria);
+mostrar("Medio superior y superior:");
+mostrar(cnt_superior);
+
+// ── 5. Conteo por sexo ────────────────────────────────────────────────────────
+let sexos = Datadoz.columna(datos, "sex");
+let cnt_mujeres = 0;
+let cnt_hombres = 0;
+for s in sexos {
+    if (s == "Mujer") {
+        let cnt_mujeres = cnt_mujeres + 1;
+    }
+    if (s == "Hombre") {
+        let cnt_hombres = cnt_hombres + 1;
+    }
+}
+mostrar("Mujeres:");
+mostrar(cnt_mujeres);
+mostrar("Hombres:");
+mostrar(cnt_hombres);
+
+// ── 6. Gráficas con Plotdoz ───────────────────────────────────────────────────
+
+// Gráfica 1: Distribución por nivel educativo (barras)
+let etiquetas_edu = ["Prim. incompleta", "Prim. completa", "Secundaria", "Superior"];
+let conteos_edu   = [cnt_primaria_inc, cnt_primaria_comp, cnt_secundaria, cnt_superior];
+
+Plotdoz.bar_chart(
+    etiquetas_edu,
+    conteos_edu,
+    "Distribucion por Nivel Educativo",
+    "Nivel",
+    "Cantidad de personas",
+    "../tests/grafica_nivel_edu.png"
+);
+
+// Gráfica 2: Histograma de edades
+Plotdoz.histogram(
+    edades,
+    "Distribucion de Edades",
+    "Edad (anos)",
+    "Frecuencia",
+    30,
+    "../tests/grafica_edades.png"
+);
+
+// Gráfica 3: Scatter — edad vs ingreso mensual
+Plotdoz.scatter(
+    edades,
+    ingresos,
+    "Edad vs Ingreso Mensual",
+    "Edad",
+    "Ingreso mensual",
+    "steelblue",
+    "../tests/grafica_scatter.png"
+);
+
+mostrar("Graficas generadas en tests/:");
+mostrar("  ../tests/grafica_nivel_edu.png");
+mostrar("  tests/grafica_edades.png");
+mostrar("  ../tests/grafica_scatter.png");

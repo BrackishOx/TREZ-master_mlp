@@ -1,0 +1,177 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// test_mlpdoz.trez — MLPdoz: Perceptrón Multicapa para Clasificación
+//
+// Demuestra:
+//   1. Crear y entrenar un MLP con un dataset
+//   2. Predecir clases y probabilidades
+//   3. Cambiar la tasa de aprendizaje (learning rate) dinámicamente
+//   4. Evaluar con exactitud, matriz de confusión y reporte
+//   5. Graficar la curva de pérdida
+// ═══════════════════════════════════════════════════════════════════════════
+
+
+// ── 1. Dataset de ejemplo: clasificación de flores (3 clases) ───────────────
+// Cada muestra: [largo_sepalo, ancho_sepalo, largo_petalo, ancho_petalo]
+// Clases: 0=setosa, 1=versicolor, 2=virginica (versión simplificada)
+
+let X = [
+  [5.1, 3.5, 1.4, 0.2],  [4.9, 3.0, 1.4, 0.2],  [4.7, 3.2, 1.3, 0.2],
+  [5.0, 3.6, 1.4, 0.2],  [5.4, 3.9, 1.7, 0.4],  [4.6, 3.4, 1.4, 0.3],
+  [5.0, 3.4, 1.5, 0.2],  [4.4, 2.9, 1.4, 0.2],  [4.9, 3.1, 1.5, 0.1],
+  [5.4, 3.7, 1.5, 0.2],
+  [7.0, 3.2, 4.7, 1.4],  [6.4, 3.2, 4.5, 1.5],  [6.9, 3.1, 4.9, 1.5],
+  [5.5, 2.3, 4.0, 1.3],  [6.5, 2.8, 4.6, 1.5],  [5.7, 2.8, 4.5, 1.3],
+  [6.3, 3.3, 4.7, 1.6],  [4.9, 2.4, 3.3, 1.0],  [6.6, 2.9, 4.6, 1.3],
+  [5.2, 2.7, 3.9, 1.4],
+  [6.3, 3.3, 6.0, 2.5],  [5.8, 2.7, 5.1, 1.9],  [7.1, 3.0, 5.9, 2.1],
+  [6.3, 2.9, 5.6, 1.8],  [6.5, 3.0, 5.8, 2.2],  [7.6, 3.0, 6.6, 2.1],
+  [4.9, 2.5, 4.5, 1.7],  [7.3, 2.9, 6.3, 1.8],  [6.7, 2.5, 5.8, 1.8],
+  [7.2, 3.6, 6.1, 2.5]
+];
+
+let y = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+];
+
+mostrar("═══ Dataset cargado ═══");
+mostrar("Muestras totales:");
+mostrar(len(X));
+mostrar("Características por muestra:");
+mostrar(len(X[0]));
+
+
+// ── 2. Dividir en entrenamiento y prueba ────────────────────────────────────
+let split = Datadoz.train_test_split(X, y, 0.25);
+let X_train = split[0];
+let y_train = split[1];
+let X_test  = split[2];
+let y_test  = split[3];
+
+mostrar("Muestras de entrenamiento:");
+mostrar(len(X_train));
+mostrar("Muestras de prueba:");
+mostrar(len(X_test));
+
+
+// ── 3. Crear el MLPClassifier ────────────────────────────────────────────────
+// Equivalente sklearn: MLPClassifier(hidden_layer_sizes=(64, 32), learning_rate_init=0.01)
+let capas_ocultas = [64, 32];
+let lr_inicial    = 0.01;
+let activacion    = "relu";
+let epocas        = 150;
+let batch         = 8;
+let verbose       = true;
+
+let modelo = MLPdoz.crear(capas_ocultas, lr_inicial, activacion, epocas, batch, verbose);
+
+mostrar("═══ Modelo creado ═══");
+mostrar("Tasa de aprendizaje inicial:");
+mostrar(MLPdoz.get_lr(modelo));
+
+
+// ── 4. Entrenar el modelo ────────────────────────────────────────────────────
+mostrar("═══ Entrenando... ═══");
+MLPdoz.entrenar(modelo, X_train, y_train);
+mostrar("Entrenamiento completado.");
+
+
+// ── 5. Evaluar exactitud ─────────────────────────────────────────────────────
+let acc_train = MLPdoz.puntaje(modelo, X_train, y_train);
+let acc_test  = MLPdoz.puntaje(modelo, X_test, y_test);
+
+mostrar("═══ Exactitud ═══");
+mostrar("Train accuracy:");
+mostrar(acc_train);
+mostrar("Test accuracy:");
+mostrar(acc_test);
+
+
+// ── 6. Predicciones ──────────────────────────────────────────────────────────
+let y_pred = MLPdoz.predecir(modelo, X_test);
+mostrar("Predicciones (primeras 5):");
+mostrar(y_pred[0]);
+mostrar(y_pred[1]);
+mostrar(y_pred[2]);
+mostrar(y_pred[3]);
+mostrar(y_pred[4]);
+
+mostrar("Etiquetas reales (primeras 5):");
+mostrar(y_test[0]);
+mostrar(y_test[1]);
+mostrar(y_test[2]);
+mostrar(y_test[3]);
+mostrar(y_test[4]);
+
+
+// ── 7. Probabilidades por clase ───────────────────────────────────────────────
+let proba = MLPdoz.predecir_proba(modelo, X_test);
+mostrar("═══ Probabilidades (1ra muestra de prueba) ═══");
+mostrar("P(clase 0):");
+mostrar(proba[0][0]);
+mostrar("P(clase 1):");
+mostrar(proba[0][1]);
+mostrar("P(clase 2):");
+mostrar(proba[0][2]);
+
+
+// ── 8. Matriz de confusión ───────────────────────────────────────────────────
+let conf = MLPdoz.matriz_confusion(y_test, y_pred);
+mostrar("═══ Matriz de Confusión ═══");
+mostrar("Clases:");
+mostrar(conf["clases"]);
+mostrar("Matriz:");
+mostrar(conf["matriz"]);
+
+
+// ── 9. Reporte de clasificación ───────────────────────────────────────────────
+let rep = MLPdoz.reporte(y_test, y_pred);
+mostrar("═══ Reporte de Clasificación ═══");
+mostrar("Exactitud global:");
+mostrar(rep["exactitud"]);
+mostrar("Precisión por clase:");
+mostrar(rep["precision"]);
+mostrar("Recall por clase:");
+mostrar(rep["recall"]);
+mostrar("F1-score por clase:");
+mostrar(rep["f1"]);
+
+
+// ── 10. Cambiar la tasa de aprendizaje y re-entrenar ─────────────────────────
+mostrar("═══ Cambio de tasa de aprendizaje ═══");
+mostrar("lr antes:");
+mostrar(MLPdoz.get_lr(modelo));
+
+MLPdoz.set_lr(modelo, 0.001);
+
+mostrar("lr después:");
+mostrar(MLPdoz.get_lr(modelo));
+
+// Continuar entrenando con lr más baja (fine-tuning)
+mostrar("Re-entrenando con lr reducida (fine-tuning)...");
+MLPdoz.entrenar(modelo, X_train, y_train);
+
+let acc_finetune = MLPdoz.puntaje(modelo, X_test, y_test);
+mostrar("Test accuracy tras fine-tuning:");
+mostrar(acc_finetune);
+
+
+// ── 11. Curva de pérdida ──────────────────────────────────────────────────────
+let historial = MLPdoz.historial(modelo);
+mostrar("═══ Historial de pérdida (últimas 5 épocas) ═══");
+let n_hist = len(historial);
+mostrar(historial[n_hist - 5]);
+mostrar(historial[n_hist - 4]);
+mostrar(historial[n_hist - 3]);
+mostrar(historial[n_hist - 2]);
+mostrar(historial[n_hist - 1]);
+
+// Graficar curva de aprendizaje (solo train loss)
+Plotdoz.learning_curve(historial);
+mostrar("Gráfica guardada: learning_curve.png");
+
+
+// ── 12. Clases reconocidas por el modelo ─────────────────────────────────────
+mostrar("═══ Clases del modelo ═══");
+mostrar(MLPdoz.clases(modelo));

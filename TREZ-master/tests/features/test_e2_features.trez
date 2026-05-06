@@ -1,0 +1,95 @@
+// test_e2_features.trez — pipe |>, lambda \x->, namespaces, bind_tuple, Inspectdoz
+
+// ── 1. Lambda basica ──────────────────────────────────────────────────────
+let doble = \x -> x * 2;
+let cuadrado = \x -> x * x;
+let negar = \x -> -x;
+
+mostrar(doble(5));      // 10
+mostrar(cuadrado(4));   // 16
+mostrar(negar(3));      // -3
+
+// Lambda en variable y llamada directa
+let sumar_uno = \n -> n + 1;
+mostrar(sumar_uno(99));  // 100
+
+// ── 2. Pipe |> basico ────────────────────────────────────────────────────
+mostrar(5 |> doble);         // 10
+mostrar(3 |> cuadrado);      // 9
+mostrar(4 |> doble |> doble); // 16
+
+// ── 3. Pipe con funciones nativas ────────────────────────────────────────
+mostrar(0.5 |> sigmoid);     // 0.622...
+mostrar(-2 |> relu);         // 0
+mostrar(4 |> sqrt);          // 2.0
+
+// ── 4. Pipe encadenado con lambda ────────────────────────────────────────
+let revertir = \v -> v.reverse();
+let resultado = [1, 2, 3] |> revertir;
+mostrar(resultado);   // [3, 2, 1]
+
+let por_tres = \x -> x * 3;
+let mas_uno  = \x -> x + 1;
+let transformado = 2 |> por_tres |> mas_uno;
+mostrar(transformado);  // 7
+
+// ── 5. Namespaces Modulo.funcion() ────────────────────────────────────────
+let v1 = [1, 2, 3];
+let v2 = [4, 5, 6];
+mostrar(Tensordoz.dot(v1, v2));    // 32
+
+let m = [[1, 2], [3, 4]];
+mostrar(Tensordoz.transpose(m));   // [[1,3],[2,4]]
+
+mostrar(Mathdoz.relu(-5));         // 0
+mostrar(Mathdoz.sigmoid(0));       // 0.5
+mostrar(Mathdoz.sqrt(9));          // 3.0
+mostrar(Mathdoz.exp(1));           // 2.718...
+mostrar(Mathdoz.factorial(5));     // 120
+
+let pred = [0.1, 0.9, 0.4];
+let real = [0.0, 1.0, 0.5];
+mostrar(Metricsdoz.mse(real, pred));       // ~0.01
+mostrar(Metricsdoz.mse_grad(real, pred));  // lista de gradientes
+
+// ── 6. Namespace en pipe ──────────────────────────────────────────────────
+let self_dot = \v -> Tensordoz.dot(v, v);
+let activado = [1, 2, 3] |> self_dot;
+mostrar(activado);   // 14
+
+// ── 7. Bind tuple — desestructuracion ────────────────────────────────────
+let [x, y] = [10, 20];
+mostrar(x);   // 10
+mostrar(y);   // 20
+
+let [a, b, c] = [1, 2, 3];
+mostrar(a + b + c);   // 6
+
+// Desestructurar resultado de funcion
+func par_de_valores() {
+    return [42, 99];
+}
+let [primero, segundo] = par_de_valores();
+mostrar(primero);   // 42
+mostrar(segundo);   // 99
+
+// Desestructurar resultado de dot
+let datos = [1.0, 0.0];
+let pesos = [[0.5, 0.5], [0.1, 0.9]];
+let salida = Tensordoz.dot(pesos, datos);
+let [s1, s2] = salida;
+mostrar(s1);   // 0.5
+mostrar(s2);   // 0.1
+
+// ── 8. Inspectdoz ────────────────────────────────────────────────────────
+let tensor = [1, 2, 3, 4, 5];
+let mismo = Inspectdoz.spy(tensor);
+mostrar(mismo == tensor);   // True
+
+let dims = Inspectdoz.shape([[1,2],[3,4],[5,6]]);
+mostrar(dims);   // [3, 2]
+
+// Inspectdoz en pipe — no rompe el flujo
+let espiar  = \v -> Inspectdoz.spy(v);
+let pipeline_result = [1, 2, 3] |> espiar |> revertir;
+mostrar(pipeline_result);   // [3, 2, 1]

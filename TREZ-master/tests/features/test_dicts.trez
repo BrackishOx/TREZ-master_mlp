@@ -1,0 +1,56 @@
+// test_dicts.trez — diccionarios y estructuras clave-valor
+
+// ── Creacion y acceso ─────────────────────────────────────────────────────
+let persona = {nombre: "Alex", edad: 22, activo: true};
+mostrar(persona["nombre"]);   // Alex
+mostrar(persona["edad"]);     // 22
+mostrar(persona["activo"]);   // True
+
+// ── keys / values ─────────────────────────────────────────────────────────
+mostrar(keys(persona));    // ['nombre', 'edad', 'activo']
+mostrar(values(persona));  // ['Alex', 22, True]
+
+// ── Metodos ───────────────────────────────────────────────────────────────
+mostrar(persona.has("nombre"));   // True
+mostrar(persona.has("apellido")); // False
+mostrar(persona.keys());          // ['nombre', 'edad', 'activo']
+mostrar(persona.values());        // ['Alex', 22, True]
+
+// .set retorna nuevo dict — inmutable
+let persona2 = persona.set("edad", 23);
+mostrar(persona2["edad"]);   // 23
+mostrar(persona["edad"]);    // 22  — original sin cambios
+
+let persona3 = persona2.set("apellido", "Lopez");
+mostrar(persona3["apellido"]);  // Lopez
+
+// ── Dict vacio ────────────────────────────────────────────────────────────
+let vacio = {};
+mostrar(vacio.has("x"));   // False
+
+// ── Dict de configuracion (uso tipico DL) ────────────────────────────────
+let config = {lr: 0.01, epochs: 100, batch: 32, dropout: 0.2};
+mostrar(config["lr"]);      // 0.01
+mostrar(config["epochs"]);  // 100
+
+// Actualizar hiperparametro
+let config2 = config.set("lr", 0.001);
+mostrar(config2["lr"]);  // 0.001
+mostrar(config["lr"]);   // 0.01
+
+// ── Dict con valores lista ────────────────────────────────────────────────
+let modelo = {pesos: [0.5, 0.3, 0.1], bias: [0.0]};
+mostrar(modelo["pesos"]);        // [0.5, 0.3, 0.1]
+mostrar(modelo["pesos"][1]);     // 0.3
+
+// ── Iterar sobre keys ─────────────────────────────────────────────────────
+let metricas = {mse: 0.05, accuracy: 0.95, loss: 0.12};
+for k in keys(metricas) {
+    mostrar(k);
+}
+// mse  accuracy  loss
+
+// ── Acceso con clave string literal ──────────────────────────────────────
+let d = {"clave uno": 1, "clave dos": 2};
+mostrar(d["clave uno"]);   // 1
+mostrar(d["clave dos"]);   // 2

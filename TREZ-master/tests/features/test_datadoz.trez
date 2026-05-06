@@ -1,0 +1,57 @@
+// test_datadoz.trez — manejo de datasets y batching (Datadoz)
+
+// ── Crear dataset desde listas ────────────────────────────────────────────
+let X = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0], [9.0, 10.0], [11.0, 12.0]];
+let Y = [0, 1, 0, 1, 0, 1];
+
+let ds = Datadoz.from_lists(X, Y);
+
+// ── Crear loader y obtener batches ────────────────────────────────────────
+let loader = Datadoz.make_loader(ds, 2, false);  // batch_size=2, shuffle=false
+let batches = Datadoz.get_batches(loader);
+
+mostrar(len(batches));        // 3  (6 muestras / batch_size 2)
+mostrar(len(batches[0]));     // 2  (cada batch = [batch_x, batch_y])
+mostrar(len(batches[0][0]));  // 2  (batch_x tiene 2 muestras)
+mostrar(len(batches[0][1]));  // 2  (batch_y tiene 2 etiquetas)
+
+// Primer batch: primeras 2 muestras
+mostrar(batches[0][0][0][0]);  // 1.0
+mostrar(batches[0][0][0][1]);  // 2.0
+mostrar(batches[0][0][1][0]);  // 3.0
+
+// Segundo batch
+mostrar(batches[1][0][0][0]);  // 5.0
+
+// Tercer batch
+mostrar(batches[2][0][0][0]);  // 9.0
+
+// ── Train/test split ──────────────────────────────────────────────────────
+let split = Datadoz.train_test_split(X, Y, 0.33);
+let X_train = split[0];
+let Y_train = split[1];
+let X_test  = split[2];
+let Y_test  = split[3];
+
+// Con 6 muestras y ratio 0.33: ~2 test, ~4 train
+mostrar(len(X_train) + len(X_test));  // 6  (total invariante)
+mostrar(len(X_train) == len(Y_train)); // True
+mostrar(len(X_test)  == len(Y_test));  // True
+mostrar(len(X_test) > 0);             // True
+
+// ── Iterar batches en un bucle de entrenamiento ───────────────────────────
+let total_muestras = 0;
+for batch in batches {
+    let bx = batch[0];
+    let total_muestras = total_muestras + len(bx);
+}
+mostrar(total_muestras);  // 6
+
+// ── Dataset pequeño — batch mayor que el dataset ─────────────────────────
+let X2 = [[1.0], [2.0]];
+let Y2 = [0, 1];
+let ds2     = Datadoz.from_lists(X2, Y2);
+let loader2 = Datadoz.make_loader(ds2, 10, false);  // batch_size > len
+let b2 = Datadoz.get_batches(loader2);
+mostrar(len(b2));           // 1  (un único batch con todo)
+mostrar(len(b2[0][0]));     // 2  (las 2 muestras)

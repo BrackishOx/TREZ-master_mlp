@@ -1,0 +1,70 @@
+// test_bubble_sort.trez — Ordenamiento burbuja en TREZ
+//
+// TREZ es funcional: no existe asignacion por indice (lista[i] = x).
+// Estrategia: set_idx() reconstruye una lista nueva con un valor cambiado,
+// permitiendo hacer swaps sin mutar el estado.
+//
+// Regla del lenguaje: expresiones compuestas (len(x)-1, arr[i]) deben
+// extraerse a 'let' antes de usarlas en condiciones 'if'.
+
+// ── set_idx: crea nueva lista con lst[idx] reemplazado por val ────────────
+func set_idx(lst, idx, val) {
+    func loop(rem, cur, acc) {
+        if (len(rem) == 0) { return acc; }
+        if (cur == idx) {
+            return loop(tail(rem), cur + 1, append(acc, val));
+        }
+        return loop(tail(rem), cur + 1, append(acc, head(rem)));
+    }
+    return loop(lst, 0, []);
+}
+
+// ── bubble_pass: un pase que empuja el mayor elemento hacia el final ──────
+func bubble_pass(lst, pos) {
+    let lim = len(lst) - 1;
+    if (pos >= lim) { return lst; }
+    let a = lst[pos];
+    let b = lst[pos + 1];
+    if (a > b) {
+        let lst2 = set_idx(lst, pos, b);
+        let lst3 = set_idx(lst2, pos + 1, a);
+        return bubble_pass(lst3, pos + 1);
+    }
+    return bubble_pass(lst, pos + 1);
+}
+
+// ── burbuja: repite n pases completos ────────────────────────────────────
+func burbuja(lst, n) {
+    if (n <= 0) { return lst; }
+    return burbuja(bubble_pass(lst, 0), n - 1);
+}
+
+// ── ordenar: funcion publica, ordena de menor a mayor ────────────────────
+func ordenar(lst) {
+    if (len(lst) <= 1) { return lst; }
+    let n = len(lst) - 1;
+    return burbuja(lst, n);
+}
+
+// ── Tests ─────────────────────────────────────────────────────────────────
+
+mostrar(ordenar([5, 3, 8, 1, 9, 2, 7, 4, 6]));
+// [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+mostrar(ordenar([5, 4, 3, 2, 1]));
+// [1, 2, 3, 4, 5]
+
+mostrar(ordenar([1, 2, 3, 4, 5]));
+// [1, 2, 3, 4, 5]
+
+mostrar(ordenar([3, 1, 4, 1, 5, 9, 2, 6, 5, 3]));
+// [1, 1, 2, 3, 3, 4, 5, 5, 6, 9]
+
+mostrar(ordenar([0, -3, 7, -1, 4, -5]));
+// [-5, -3, -1, 0, 4, 7]
+
+mostrar(ordenar([42]));
+// [42]
+
+mostrar(ordenar([10, 1]));
+// [1, 10]

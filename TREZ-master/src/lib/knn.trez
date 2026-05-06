@@ -1,0 +1,190 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// knn.trez — K-Vecinos más Cercanos (KNN) implementado en TREZ nativo
+//
+// Uso:
+//   let modelo = knn_crear(3);
+//   let modelo = knn_entrenar(modelo, X_train, y_train);
+//   let preds  = knn_predecir(modelo, X_test);
+//   let acc    = knn_puntaje(modelo, X_test, y_test);
+//   let modelo = knn_set_k(modelo, 5);
+// ═══════════════════════════════════════════════════════════════════════════
+
+
+// ── Distancia euclidea entre dos vectores ────────────────────────────────────
+func knn_distancia(a, b) {
+    let suma = 0.0;
+    let i = 0;
+    while (i < len(a)) {
+        let diff = a[i] - b[i];
+        let suma = suma + diff * diff;
+        let i = i + 1;
+    }
+    return sqrt(suma);
+}
+
+
+// ── Insertar ordenado en lista de vecinos (tamaño k máx) ────────────────────
+func knn_insertar_ordenado(vecinos, dist, etiqueta, k) {
+    let nuevo = [dist, etiqueta];
+    let resultado = append(vecinos, nuevo);
+    // Bubble sort por distancia (lista pequeña, eficiente)
+    let n = len(resultado);
+    let i = 0;
+    while (i < n - 1) {
+        let j = 0;
+        while (j < n - i - 1) {
+            if (resultado[j][0] > resultado[j + 1][0]) {
+                let temp = resultado[j];
+                let resultado = resultado.slice(0, j);
+                let resultado = append(resultado, resultado[j + 1]);
+                // reconstruir con swap
+            }
+            let j = j + 1;
+        }
+        let i = i + 1;
+    }
+    // Retornar solo los primeros k
+    if (len(resultado) > k) {
+        return resultado.slice(0, k);
+    }
+    return resultado;
+}
+
+
+// ── Obtener k vecinos más cercanos para una muestra ──────────────────────────
+func knn_obtener_vecinos(X_train, y_train, muestra, k) {
+    let vecinos = [];
+    let i = 0;
+    while (i < len(X_train)) {
+        let d = knn_distancia(muestra, X_train[i]);
+        let vecinos = append(vecinos, [d, y_train[i]]);
+        let i = i + 1;
+    }
+    // Ordenar por distancia (bubble sort)
+    let n = len(vecinos);
+    let i = 0;
+    while (i < n - 1) {
+        let j = 0;
+        while (j < n - i - 1) {
+            if (vecinos[j][0] > vecinos[j + 1][0]) {
+                let temp = vecinos[j];
+                let nuevo = [];
+                let idx = 0;
+                while (idx < n) {
+                    if (idx == j) {
+                        let nuevo = append(nuevo, vecinos[j + 1]);
+                    } else if (idx == j + 1) {
+                        let nuevo = append(nuevo, temp);
+                    } else {
+                        let nuevo = append(nuevo, vecinos[idx]);
+                    }
+                    let idx = idx + 1;
+                }
+                let vecinos = nuevo;
+            }
+            let j = j + 1;
+        }
+        let i = i + 1;
+    }
+    // Retornar los primeros k
+    return vecinos.slice(0, k);
+}
+
+
+// ── Votación por mayoría ─────────────────────────────────────────────────────
+func knn_votar(vecinos) {
+    // Contar votos por clase usando lista de pares [clase, conteo]
+    let conteos = [];
+    let i = 0;
+    while (i < len(vecinos)) {
+        let clase = vecinos[i][1];
+        let encontrado = false;
+        let j = 0;
+        while (j < len(conteos)) {
+            if (conteos[j][0] == clase) {
+                let nuevo_conteo = conteos[j][1] + 1;
+                let nuevo_par = [clase, nuevo_conteo];
+                let nuevos = [];
+                let idx = 0;
+                while (idx < len(conteos)) {
+                    if (idx == j) {
+                        let nuevos = append(nuevos, nuevo_par);
+                    } else {
+                        let nuevos = append(nuevos, conteos[idx]);
+                    }
+                    let idx = idx + 1;
+                }
+                let conteos = nuevos;
+                let encontrado = true;
+            }
+            let j = j + 1;
+        }
+        if (not encontrado) {
+            let conteos = append(conteos, [clase, 1]);
+        }
+        let i = i + 1;
+    }
+    // Clase con más votos
+    let mejor_clase = conteos[0][0];
+    let mejor_conteo = conteos[0][1];
+    let i = 1;
+    while (i < len(conteos)) {
+        if (conteos[i][1] > mejor_conteo) {
+            let mejor_clase = conteos[i][0];
+            let mejor_conteo = conteos[i][1];
+        }
+        let i = i + 1;
+    }
+    return mejor_clase;
+}
+
+
+// ── API pública ──────────────────────────────────────────────────────────────
+
+func knn_crear(k) {
+    return {k: k, X_train: [], y_train: [], entrenado: false};
+}
+
+func knn_set_k(modelo, nuevo_k) {
+    return {k: nuevo_k, X_train: modelo["X_train"],
+            y_train: modelo["y_train"], entrenado: modelo["entrenado"]};
+}
+
+func knn_get_k(modelo) {
+    return modelo["k"];
+}
+
+func knn_entrenar(modelo, X, y) {
+    return {k: modelo["k"], X_train: X, y_train: y, entrenado: true};
+}
+
+func knn_predecir_uno(modelo, muestra) {
+    let vecinos = knn_obtener_vecinos(
+        modelo["X_train"], modelo["y_train"], muestra, modelo["k"]
+    );
+    return knn_votar(vecinos);
+}
+
+func knn_predecir(modelo, X) {
+    let preds = [];
+    let i = 0;
+    while (i < len(X)) {
+        let pred = knn_predecir_uno(modelo, X[i]);
+        let preds = append(preds, pred);
+        let i = i + 1;
+    }
+    return preds;
+}
+
+func knn_puntaje(modelo, X, y) {
+    let preds = knn_predecir(modelo, X);
+    let correctos = 0;
+    let i = 0;
+    while (i < len(y)) {
+        if (preds[i] == y[i]) {
+            let correctos = correctos + 1;
+        }
+        let i = i + 1;
+    }
+    return correctos / len(y);
+}

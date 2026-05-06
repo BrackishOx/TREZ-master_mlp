@@ -1,0 +1,11 @@
+// Prueba del Motor de IO Nativo (iodoz)
+let archivo = "datos_test.csv";
+let contenido = "1.0,2.0,3.0\n4.0,5.0,6.0";
+
+// Escribimos en el disco duro iterando la función nativa escribir()
+escribir(archivo, contenido);
+
+// Leemos para comprobar que pudimos acceder al archivo.
+let leido = leer(archivo);
+
+leido;

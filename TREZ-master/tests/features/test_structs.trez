@@ -1,0 +1,89 @@
+// test_structs.trez — Queue (FIFO) y Stack (LIFO)
+
+// ── Queue basico ──────────────────────────────────────────────────────────
+let q = Queue();
+mostrar(q.isEmpty());   // True
+mostrar(q.size());      // 0
+
+let q = q.enqueue(10);
+let q = q.enqueue(20);
+let q = q.enqueue(30);
+mostrar(q.size());      // 3
+mostrar(q.isEmpty());   // False
+mostrar(q.peek());      // 10  (FIFO — primero que entro)
+mostrar(q.toList());    // [10, 20, 30]
+
+// Dequeue retorna [valor, nueva_queue]
+let r1 = q.dequeue();
+let v1 = r1[0];
+let q  = r1[1];
+mostrar(v1);            // 10
+mostrar(q.toList());    // [20, 30]
+mostrar(q.size());      // 2
+
+let r2 = q.dequeue();
+mostrar(r2[0]);         // 20
+mostrar(r2[1].toList()); // [30]
+
+// ── Queue — uso tipico: pipeline de datos ─────────────────────────────────
+func llenar_queue(datos) {
+    if (len(datos) == 0) { return Queue(); }
+    let q = llenar_queue(tail(datos));
+    return q.enqueue(head(datos));
+}
+
+// ── Stack basico ──────────────────────────────────────────────────────────
+let s = Stack();
+mostrar(s.isEmpty());   // True
+mostrar(s.size());      // 0
+
+let s = s.push(1);
+let s = s.push(2);
+let s = s.push(3);
+mostrar(s.size());      // 3
+mostrar(s.isEmpty());   // False
+mostrar(s.peek());      // 3  (LIFO — ultimo que entro)
+mostrar(s.toList());    // [1, 2, 3]
+
+// Pop retorna [valor, nuevo_stack]
+let p1 = s.pop();
+let top = p1[0];
+let s   = p1[1];
+mostrar(top);           // 3
+mostrar(s.toList());    // [1, 2]
+mostrar(s.size());      // 2
+
+let p2 = s.pop();
+mostrar(p2[0]);         // 2
+mostrar(p2[1].toList()); // [1]
+
+// ── Stack — uso tipico: evaluar expresion con precedencia ─────────────────
+let pila = Stack();
+let pila = pila.push(5);
+let pila = pila.push(3);
+let r = pila.pop();
+let a = r[0];
+let pila = r[1];
+let r = pila.pop();
+let b = r[0];
+mostrar(a + b);   // 8
+
+// ── len() sobre estructuras ───────────────────────────────────────────────
+let q2 = Queue();
+let q2 = q2.enqueue(1);
+let q2 = q2.enqueue(2);
+mostrar(len(q2));   // 2
+
+let s2 = Stack();
+let s2 = s2.push(9);
+mostrar(len(s2));   // 1
+
+// ── for sobre toList() ────────────────────────────────────────────────────
+let cola = Queue();
+let cola = cola.enqueue(100);
+let cola = cola.enqueue(200);
+let cola = cola.enqueue(300);
+for item in cola.toList() {
+    mostrar(item);
+}
+// 100  200  300

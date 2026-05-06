@@ -1,0 +1,1084 @@
+// ═══════════════════════════════════════════════════════════════════════════════
+// ml.trez — Machine Learning & Deep Learning implementado en TREZ nativo
+//
+// Incluye:
+//   - Utilidades:         concat, swap_en, ordenar, argmax, unico,
+//                         distancia_euclidea
+//   - KNN:                knn_crear, knn_entrenar, knn_predecir, knn_puntaje,
+//                         knn_set_k, knn_get_k
+//   - Regresión Logística: logreg_crear, logreg_entrenar, logreg_predecir,
+//                          logreg_puntaje, logreg_set_lr, logreg_get_lr
+//   - Árbol de Decisión:  arbol_crear, arbol_entrenar, arbol_predecir,
+//                         arbol_puntaje
+//   - MLP:                mlp_crear, mlp_entrenar, mlp_predecir,
+//                         mlp_puntaje, mlp_set_lr, mlp_get_lr
+//   - Métricas:           exactitud, matriz_confusion, reporte_clasificacion
+// ═══════════════════════════════════════════════════════════════════════════════
+
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SECCIÓN 1 — UTILIDADES GENERALES
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Concatenar dos listas
+func concat(a, b) {
+    let r = a;
+    let i = 0;
+    while (i < len(b)) {
+        let r = append(r, b[i]);
+        let i = i + 1;
+    }
+    return r;
+}
+
+// Intercambiar elementos j y j+1 en una lista (retorna nueva lista)
+func swap_en(L, j) {
+    let antes   = L.slice(0, j);
+    let despues = L.slice(j + 2, len(L));
+    return concat(append(append(antes, L[j + 1]), L[j]), despues);
+}
+
+// Ordenar lista de pares [valor, etiqueta] por el primer elemento (burbuja)
+func una_pasada_pares(L) {
+    let j = 0;
+    let n = len(L);
+    while (j < (n - 1)) {
+        if (L[j][0] > L[j + 1][0]) {
+            let L = swap_en(L, j);
+        }
+        let j = j + 1;
+    }
+    return L;
+}
+
+func ordenar_pares(lista) {
+    let L = lista;
+    let n = len(L);
+    let i = 0;
+    while (i < (n - 1)) {
+        let L = una_pasada_pares(L);
+        let i = i + 1;
+    }
+    return L;
+}
+
+// Índice del mayor valor en una lista
+func argmax(lista) {
+    let mejor_idx = 0;
+    let mejor_val = lista[0];
+    let i = 1;
+    while (i < len(lista)) {
+        if (lista[i] > mejor_val) {
+            let mejor_val = lista[i];
+            let mejor_idx = i;
+        }
+        let i = i + 1;
+    }
+    return mejor_idx;
+}
+
+// Valores únicos de una lista (preserva orden de aparición)
+func unico(lista) {
+    let result = [];
+    let i = 0;
+    while (i < len(lista)) {
+        let val = lista[i];
+        let ya_esta = false;
+        let j = 0;
+        while (j < len(result)) {
+            if (result[j] == val) {
+                let ya_esta = true;
+            }
+            let j = j + 1;
+        }
+        if (not ya_esta) {
+            let result = append(result, val);
+        }
+        let i = i + 1;
+    }
+    return result;
+}
+
+// Distancia euclidea entre dos vectores
+func distancia_euclidea(a, b) {
+    let suma = 0.0;
+    let i = 0;
+    while (i < len(a)) {
+        let d = a[i] - b[i];
+        let suma = suma + d * d;
+        let i = i + 1;
+    }
+    return sqrt(suma);
+}
+
+// Función sigmoide
+func sigmoid_fn(z) {
+    return 1.0 / (1.0 + exp(-z));
+}
+
+// Producto punto entre vector w y vector x
+func dot_vec(w, x) {
+    let s = 0.0;
+    let i = 0;
+    while (i < len(w)) {
+        let s = s + w[i] * x[i];
+        let i = i + 1;
+    }
+    return s;
+}
+
+// Softmax sobre un vector (retorna lista de probabilidades)
+func softmax_vec(v) {
+    let max_v = v[0];
+    let i = 1;
+    while (i < len(v)) {
+        if (v[i] > max_v) { let max_v = v[i]; }
+        let i = i + 1;
+    }
+    let exps = [];
+    let i = 0;
+    let suma = 0.0;
+    while (i < len(v)) {
+        let e = exp(v[i] - max_v);
+        let exps = append(exps, e);
+        let suma = suma + e;
+        let i = i + 1;
+    }
+    let result = [];
+    let i = 0;
+    while (i < len(exps)) {
+        let result = append(result, exps[i] / suma);
+        let i = i + 1;
+    }
+    return result;
+}
+
+// Multiplicación matriz × vector: M (n x m) · v (m) → resultado (n)
+func matmul_vec(M, v) {
+    let result = [];
+    let i = 0;
+    while (i < len(M)) {
+        let result = append(result, dot_vec(M[i], v));
+        let i = i + 1;
+    }
+    return result;
+}
+
+// Crear matriz de ceros (filas x cols)
+func ceros(filas, cols) {
+    let M = [];
+    let i = 0;
+    while (i < filas) {
+        let fila = [];
+        let j = 0;
+        while (j < cols) {
+            let fila = append(fila, 0.0);
+            let j = j + 1;
+        }
+        let M = append(M, fila);
+        let i = i + 1;
+    }
+    return M;
+}
+
+// Crear vector de ceros
+func ceros_vec(n) {
+    let v = [];
+    let i = 0;
+    while (i < n) {
+        let v = append(v, 0.0);
+        let i = i + 1;
+    }
+    return v;
+}
+
+// Suma elemento a elemento de dos vectores
+func sumar_vecs(a, b) {
+    let r = [];
+    let i = 0;
+    while (i < len(a)) {
+        let r = append(r, a[i] + b[i]);
+        let i = i + 1;
+    }
+    return r;
+}
+
+// Restar: a - b elemento a elemento
+func restar_vecs(a, b) {
+    let r = [];
+    let i = 0;
+    while (i < len(a)) {
+        let r = append(r, a[i] - b[i]);
+        let i = i + 1;
+    }
+    return r;
+}
+
+// Escalar × vector
+func escalar_vec(s, v) {
+    let r = [];
+    let i = 0;
+    while (i < len(v)) {
+        let r = append(r, s * v[i]);
+        let i = i + 1;
+    }
+    return r;
+}
+
+// Transponer matriz (lista de listas)
+func transponer(M) {
+    let filas = len(M);
+    let cols  = len(M[0]);
+    let T = ceros(cols, filas);
+    let i = 0;
+    while (i < filas) {
+        let j = 0;
+        while (j < cols) {
+            let fila_T = T[j];
+            let nueva_fila = fila_T.slice(0, i);
+            let nueva_fila = append(nueva_fila, M[i][j]);
+            let nueva_fila = concat(nueva_fila, fila_T.slice(i + 1, len(fila_T)));
+            let T = swap_en(T, j);    // usar swap auxiliar para actualizar fila j
+            // reemplazar fila j con nueva_fila en T
+            let nuevo_T = T.slice(0, j);
+            let nuevo_T = append(nuevo_T, nueva_fila);
+            let nuevo_T = concat(nuevo_T, T.slice(j + 1, len(T)));
+            let T = nuevo_T;
+            let j = j + 1;
+        }
+        let i = i + 1;
+    }
+    return T;
+}
+
+// Reemplazar fila j de matriz M con nueva_fila
+func reemplazar_fila(M, j, nueva_fila) {
+    let antes   = M.slice(0, j);
+    let despues = M.slice(j + 1, len(M));
+    return concat(append(antes, nueva_fila), despues);
+}
+
+// Multiplicación W (salida x entrada) · x (entrada) + b (salida) → pre-activación
+func capa_forward(W, b, x) {
+    let resultado = [];
+    let i = 0;
+    while (i < len(W)) {
+        let resultado = append(resultado, dot_vec(W[i], x) + b[i]);
+        let i = i + 1;
+    }
+    return resultado;
+}
+
+// ReLU elemento a elemento
+func relu_vec(v) {
+    let r = [];
+    let i = 0;
+    while (i < len(v)) {
+        if (v[i] > 0.0) { let r = append(r, v[i]); }
+        else             { let r = append(r, 0.0); }
+        let i = i + 1;
+    }
+    return r;
+}
+
+// Máscara ReLU (1 si > 0, 0 si no)
+func relu_mascara(v) {
+    let r = [];
+    let i = 0;
+    while (i < len(v)) {
+        if (v[i] > 0.0) { let r = append(r, 1.0); }
+        else             { let r = append(r, 0.0); }
+        let i = i + 1;
+    }
+    return r;
+}
+
+// Multiplicar dos vectores elemento a elemento
+func mult_elem(a, b) {
+    let r = [];
+    let i = 0;
+    while (i < len(a)) {
+        let r = append(r, a[i] * b[i]);
+        let i = i + 1;
+    }
+    return r;
+}
+
+// Xavier init: límite = sqrt(6 / (fan_in + fan_out))
+// Usamos una secuencia pseudo-aleatoria determinista basada en índice
+func xavier_val(fan_in, fan_out, i, j) {
+    let limit = sqrt(6.0 / (fan_in + fan_out));
+    // Pseudo-random via sin hash
+    let val = sin(fan_in * 1000.0 + fan_out * 100.0 + i * 17.0 + j * 31.0) * limit;
+    return val;
+}
+
+// Inicializar matriz W (out_size x in_size) con Xavier
+func init_W(in_size, out_size) {
+    let W = [];
+    let i = 0;
+    while (i < out_size) {
+        let fila = [];
+        let j = 0;
+        while (j < in_size) {
+            let fila = append(fila, xavier_val(in_size, out_size, i, j));
+            let j = j + 1;
+        }
+        let W = append(W, fila);
+        let i = i + 1;
+    }
+    return W;
+}
+
+// Actualizar fila k de W restando lr * grad_fila
+func actualizar_W(W, gradW, lr) {
+    let nuevo_W = [];
+    let i = 0;
+    while (i < len(W)) {
+        let nueva_fila = restar_vecs(W[i], escalar_vec(lr, gradW[i]));
+        let nuevo_W = append(nuevo_W, nueva_fila);
+        let i = i + 1;
+    }
+    return nuevo_W;
+}
+
+// Outer product: a (m) ⊗ b (n) → M (m x n)
+func outer(a, b) {
+    let M = [];
+    let i = 0;
+    while (i < len(a)) {
+        let fila = escalar_vec(a[i], b);
+        let M = append(M, fila);
+        let i = i + 1;
+    }
+    return M;
+}
+
+// Sumar dos matrices elemento a elemento
+func sumar_matrices(A, B) {
+    let R = [];
+    let i = 0;
+    while (i < len(A)) {
+        let R = append(R, sumar_vecs(A[i], B[i]));
+        let i = i + 1;
+    }
+    return R;
+}
+
+// Escalar × matriz
+func escalar_mat(s, M) {
+    let R = [];
+    let i = 0;
+    while (i < len(M)) {
+        let R = append(R, escalar_vec(s, M[i]));
+        let i = i + 1;
+    }
+    return R;
+}
+
+// W^T · v: W es (out x in), resultado es (in)
+func Wt_dot(W, v) {
+    let in_size  = len(W[0]);
+    let out_size = len(W);
+    let result = [];
+    let j = 0;
+    while (j < in_size) {
+        let s = 0.0;
+        let k = 0;
+        while (k < out_size) {
+            let s = s + W[k][j] * v[k];
+            let k = k + 1;
+        }
+        let result = append(result, s);
+        let j = j + 1;
+    }
+    return result;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SECCIÓN 2 — K-VECINOS MÁS CERCANOS (KNN)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Obtener k vecinos más cercanos (retorna lista de [distancia, etiqueta])
+func knn_vecinos_cercanos(X_train, y_train, muestra, k) {
+    let pares = [];
+    let i = 0;
+    while (i < len(X_train)) {
+        let d = distancia_euclidea(muestra, X_train[i]);
+        let pares = append(pares, [d, y_train[i]]);
+        let i = i + 1;
+    }
+    let pares = ordenar_pares(pares);
+    return pares.slice(0, k);
+}
+
+// Votar por mayoría entre los vecinos
+func knn_votar(vecinos) {
+    let clases = [];
+    let conteos = [];
+    let i = 0;
+    while (i < len(vecinos)) {
+        let clase = vecinos[i][1];
+        let encontrado = false;
+        let j = 0;
+        while (j < len(clases)) {
+            if (clases[j] == clase) {
+                let nuevo_c = conteos[j] + 1;
+                let nuevos_c = conteos.slice(0, j);
+                let nuevos_c = append(nuevos_c, nuevo_c);
+                let nuevos_c = concat(nuevos_c, conteos.slice(j + 1, len(conteos)));
+                let conteos = nuevos_c;
+                let encontrado = true;
+            }
+            let j = j + 1;
+        }
+        if (not encontrado) {
+            let clases  = append(clases, clase);
+            let conteos = append(conteos, 1);
+        }
+        let i = i + 1;
+    }
+    let mejor = clases[0];
+    let max_c = conteos[0];
+    let i = 1;
+    while (i < len(clases)) {
+        if (conteos[i] > max_c) {
+            let mejor = clases[i];
+            let max_c = conteos[i];
+        }
+        let i = i + 1;
+    }
+    return mejor;
+}
+
+// Crear modelo KNN
+func knn_crear(k) {
+    return {tipo: "knn", k: k, X_train: [], y_train: []};
+}
+
+func knn_set_k(modelo, nuevo_k) {
+    return {tipo: "knn", k: nuevo_k,
+            X_train: modelo["X_train"], y_train: modelo["y_train"]};
+}
+
+func knn_get_k(modelo) {
+    return modelo["k"];
+}
+
+func knn_entrenar(modelo, X, y) {
+    return {tipo: "knn", k: modelo["k"], X_train: X, y_train: y};
+}
+
+func knn_predecir_uno(modelo, muestra) {
+    let vecinos = knn_vecinos_cercanos(
+        modelo["X_train"], modelo["y_train"], muestra, modelo["k"]
+    );
+    return knn_votar(vecinos);
+}
+
+func knn_predecir(modelo, X) {
+    let preds = [];
+    let i = 0;
+    while (i < len(X)) {
+        let preds = append(preds, knn_predecir_uno(modelo, X[i]));
+        let i = i + 1;
+    }
+    return preds;
+}
+
+func knn_puntaje(modelo, X, y) {
+    let preds = knn_predecir(modelo, X);
+    let correctos = 0;
+    let i = 0;
+    while (i < len(y)) {
+        if (preds[i] == y[i]) { let correctos = correctos + 1; }
+        let i = i + 1;
+    }
+    return correctos / len(y);
+}
+
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SECCIÓN 3 — REGRESIÓN LOGÍSTICA (Gradiente Descendente)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Un paso SGD para clasificador binario
+// Retorna [w_nuevo, b_nuevo]
+func logreg_paso(w, b, x, y_real, lr) {
+    let z    = dot_vec(w, x) + b;
+    let pred = sigmoid_fn(z);
+    let error = pred - y_real;
+    // w = w - lr * error * x
+    let nuevo_w = restar_vecs(w, escalar_vec(lr * error, x));
+    let nuevo_b = b - lr * error;
+    return [nuevo_w, nuevo_b];
+}
+
+// Entrenar clasificador binario con SGD (One-vs-Rest)
+// Retorna [w, b, historial_perdida]
+func logreg_entrenar_binario(X, y_bin, n_features, lr, max_iter) {
+    let w    = ceros_vec(n_features);
+    let b    = 0.0;
+    let hist = [];
+    let epoca = 0;
+    while (epoca < max_iter) {
+        let perdida = 0.0;
+        let i = 0;
+        while (i < len(X)) {
+            let paso = logreg_paso(w, b, X[i], y_bin[i], lr);
+            let w = paso[0];
+            let b = paso[1];
+            // acumular pérdida binary cross-entropy
+            let z    = dot_vec(w, X[i]) + b;
+            let p    = sigmoid_fn(z);
+            if (p < 0.0001)  { let p = 0.0001; }
+            if (p > 0.9999)  { let p = 0.9999; }
+            if (y_bin[i] == 1) {
+                let perdida = perdida - log(p);
+            } else {
+                let perdida = perdida - log(1.0 - p);
+            }
+            let i = i + 1;
+        }
+        let hist = append(hist, perdida / len(X));
+        let epoca = epoca + 1;
+    }
+    return [w, b, hist];
+}
+
+// Predecir probabilidad binaria
+func logreg_proba_binaria(w, b, x) {
+    return sigmoid_fn(dot_vec(w, x) + b);
+}
+
+// Crear modelo logístico (One-vs-Rest para multiclase)
+func logreg_crear(lr, max_iter) {
+    return {tipo: "logreg", lr: lr, max_iter: max_iter,
+            clases: [], pesos: [], bias: [], hist: []};
+}
+
+func logreg_set_lr(modelo, nueva_lr) {
+    return {tipo: "logreg", lr: nueva_lr, max_iter: modelo["max_iter"],
+            clases: modelo["clases"], pesos: modelo["pesos"],
+            bias: modelo["bias"], hist: modelo["hist"]};
+}
+
+func logreg_get_lr(modelo) {
+    return modelo["lr"];
+}
+
+func logreg_entrenar(modelo, X, y) {
+    let clases     = unico(y);
+    let n_features = len(X[0]);
+    let lr         = modelo["lr"];
+    let max_iter   = modelo["max_iter"];
+    let todos_w    = [];
+    let todos_b    = [];
+    let todos_h    = [];
+    let c = 0;
+    while (c < len(clases)) {
+        // construir etiquetas binarias para esta clase
+        let y_bin = [];
+        let i = 0;
+        while (i < len(y)) {
+            if (y[i] == clases[c]) { let y_bin = append(y_bin, 1); }
+            else                   { let y_bin = append(y_bin, 0); }
+            let i = i + 1;
+        }
+        let resultado = logreg_entrenar_binario(X, y_bin, n_features, lr, max_iter);
+        let todos_w = append(todos_w, resultado[0]);
+        let todos_b = append(todos_b, resultado[1]);
+        let todos_h = append(todos_h, resultado[2]);
+        let c = c + 1;
+    }
+    return {tipo: "logreg", lr: lr, max_iter: max_iter,
+            clases: clases, pesos: todos_w, bias: todos_b, hist: todos_h};
+}
+
+func logreg_predecir_uno(modelo, x) {
+    let scores = [];
+    let c = 0;
+    while (c < len(modelo["clases"])) {
+        let p = logreg_proba_binaria(modelo["pesos"][c], modelo["bias"][c], x);
+        let scores = append(scores, p);
+        let c = c + 1;
+    }
+    return modelo["clases"][argmax(scores)];
+}
+
+func logreg_predecir(modelo, X) {
+    let preds = [];
+    let i = 0;
+    while (i < len(X)) {
+        let preds = append(preds, logreg_predecir_uno(modelo, X[i]));
+        let i = i + 1;
+    }
+    return preds;
+}
+
+func logreg_puntaje(modelo, X, y) {
+    let preds = logreg_predecir(modelo, X);
+    let ok = 0;
+    let i = 0;
+    while (i < len(y)) {
+        if (preds[i] == y[i]) { let ok = ok + 1; }
+        let i = i + 1;
+    }
+    return ok / len(y);
+}
+
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SECCIÓN 4 — ÁRBOL DE DECISIÓN (Criterio Gini)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Calcular impureza Gini de una lista de etiquetas
+func gini(etiquetas) {
+    let n = len(etiquetas);
+    if (n == 0) { return 0.0; }
+    let clases  = unico(etiquetas);
+    let impureza = 1.0;
+    let c = 0;
+    while (c < len(clases)) {
+        let conteo = 0;
+        let i = 0;
+        while (i < n) {
+            if (etiquetas[i] == clases[c]) { let conteo = conteo + 1; }
+            let i = i + 1;
+        }
+        let p = conteo / n;
+        let impureza = impureza - p * p;
+        let c = c + 1;
+    }
+    return impureza;
+}
+
+// Clase mayoritaria en una lista
+func clase_mayoritaria(etiquetas) {
+    let clases  = unico(etiquetas);
+    let mejor   = clases[0];
+    let max_cnt = 0;
+    let c = 0;
+    while (c < len(clases)) {
+        let conteo = 0;
+        let i = 0;
+        while (i < len(etiquetas)) {
+            if (etiquetas[i] == clases[c]) { let conteo = conteo + 1; }
+            let i = i + 1;
+        }
+        if (conteo > max_cnt) {
+            let mejor   = clases[c];
+            let max_cnt = conteo;
+        }
+        let c = c + 1;
+    }
+    return mejor;
+}
+
+// Encontrar el mejor split para un nodo
+// Retorna [mejor_feature, mejor_umbral, mejor_ganancia]
+func mejor_split(X, y) {
+    let n           = len(X);
+    let n_features  = len(X[0]);
+    let base_gini   = gini(y);
+    let mejor_feat  = -1;
+    let mejor_umbral = 0.0;
+    let mejor_gan   = 0.0;
+    let f = 0;
+    while (f < n_features) {
+        // Obtener valores únicos del feature f
+        let vals = [];
+        let i = 0;
+        while (i < n) {
+            let vals = append(vals, X[i][f]);
+            let i = i + 1;
+        }
+        let vals = unico(vals);
+        // Ordenar vals (burbuja simple)
+        let nv = len(vals);
+        let p = 0;
+        while (p < (nv - 1)) {
+            let q = 0;
+            while (q < (nv - p - 1)) {
+                if (vals[q] > vals[q + 1]) {
+                    let vals = swap_en(vals, q);
+                }
+                let q = q + 1;
+            }
+            let p = p + 1;
+        }
+        // Probar umbrales entre valores consecutivos
+        let v = 0;
+        while (v < (len(vals) - 1)) {
+            let umbral = (vals[v] + vals[v + 1]) / 2.0;
+            let y_izq = [];
+            let y_der = [];
+            let i = 0;
+            while (i < n) {
+                if (X[i][f] <= umbral) { let y_izq = append(y_izq, y[i]); }
+                else                   { let y_der = append(y_der, y[i]); }
+                let i = i + 1;
+            }
+            if (len(y_izq) > 0 && len(y_der) > 0) {
+                let ganancia = base_gini
+                    - (len(y_izq) / n) * gini(y_izq)
+                    - (len(y_der) / n) * gini(y_der);
+                if (ganancia > mejor_gan) {
+                    let mejor_gan    = ganancia;
+                    let mejor_feat   = f;
+                    let mejor_umbral = umbral;
+                }
+            }
+            let v = v + 1;
+        }
+        let f = f + 1;
+    }
+    return [mejor_feat, mejor_umbral, mejor_gan];
+}
+
+// Construir árbol recursivamente
+// Retorna dict que representa un nodo:
+//   - hoja: {hoja: true, clase: c}
+//   - interno: {hoja: false, feat: f, umbral: u, izq: nodo, der: nodo}
+func construir_arbol(X, y, max_prof, min_muestras, prof_actual) {
+    let n = len(y);
+    // Condiciones de parada
+    let es_puro = (gini(y) == 0.0);
+    let muy_poco = (n < min_muestras);
+    let max_prof_alcanzada = (prof_actual >= max_prof);
+    if (es_puro || muy_poco || max_prof_alcanzada) {
+        return {hoja: true, clase: clase_mayoritaria(y)};
+    }
+    let split = mejor_split(X, y);
+    let feat    = split[0];
+    let umbral  = split[1];
+    let ganancia = split[2];
+    if (feat == -1 || ganancia <= 0.0) {
+        return {hoja: true, clase: clase_mayoritaria(y)};
+    }
+    // Dividir dataset
+    let X_izq = []; let y_izq = [];
+    let X_der = []; let y_der = [];
+    let i = 0;
+    while (i < n) {
+        if (X[i][feat] <= umbral) {
+            let X_izq = append(X_izq, X[i]);
+            let y_izq = append(y_izq, y[i]);
+        } else {
+            let X_der = append(X_der, X[i]);
+            let y_der = append(y_der, y[i]);
+        }
+        let i = i + 1;
+    }
+    let nodo_izq = construir_arbol(X_izq, y_izq, max_prof, min_muestras, prof_actual + 1);
+    let nodo_der = construir_arbol(X_der, y_der, max_prof, min_muestras, prof_actual + 1);
+    return {hoja: false, feat: feat, umbral: umbral, izq: nodo_izq, der: nodo_der};
+}
+
+// Predecir con el árbol para una muestra
+func arbol_predecir_uno(nodo, x) {
+    if (nodo["hoja"]) {
+        return nodo["clase"];
+    }
+    if (x[nodo["feat"]] <= nodo["umbral"]) {
+        return arbol_predecir_uno(nodo["izq"], x);
+    } else {
+        return arbol_predecir_uno(nodo["der"], x);
+    }
+}
+
+// API pública del árbol
+func arbol_crear(max_prof, min_muestras) {
+    return {tipo: "arbol", max_prof: max_prof, min_muestras: min_muestras, nodo: {}};
+}
+
+func arbol_entrenar(modelo, X, y) {
+    let nodo = construir_arbol(X, y, modelo["max_prof"], modelo["min_muestras"], 0);
+    return {tipo: "arbol", max_prof: modelo["max_prof"],
+            min_muestras: modelo["min_muestras"], nodo: nodo};
+}
+
+func arbol_predecir(modelo, X) {
+    let preds = [];
+    let i = 0;
+    while (i < len(X)) {
+        let preds = append(preds, arbol_predecir_uno(modelo["nodo"], X[i]));
+        let i = i + 1;
+    }
+    return preds;
+}
+
+func arbol_puntaje(modelo, X, y) {
+    let preds = arbol_predecir(modelo, X);
+    let ok = 0;
+    let i = 0;
+    while (i < len(y)) {
+        if (preds[i] == y[i]) { let ok = ok + 1; }
+        let i = i + 1;
+    }
+    return ok / len(y);
+}
+
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SECCIÓN 5 — PERCEPTRÓN MULTICAPA (MLP) con Backpropagation
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Forward pass para UNA muestra a través de todas las capas
+// capas = lista de {W: ..., b: ...}
+// Retorna [salida_final, lista_de_activaciones_por_capa]
+func mlp_forward(capas, x) {
+    let actual = x;
+    let activaciones = [x];
+    let i = 0;
+    while (i < len(capas)) {
+        let pre = capa_forward(capas[i]["W"], capas[i]["b"], actual);
+        if (i < (len(capas) - 1)) {
+            let actual = relu_vec(pre);
+        } else {
+            // última capa: softmax
+            let actual = softmax_vec(pre);
+        }
+        let activaciones = append(activaciones, actual);
+        let i = i + 1;
+    }
+    return [actual, activaciones];
+}
+
+// Backward pass para UNA muestra
+// Retorna lista de {gradW, gradb} por capa (en orden capa 0..n-1)
+func mlp_backward(capas, activaciones, y_int, n_clases) {
+    // Gradiente de cross-entropy + softmax (última capa)
+    let salida = activaciones[len(activaciones) - 1];
+    let grad = [];
+    let j = 0;
+    while (j < len(salida)) {
+        if (j == y_int) { let grad = append(grad, salida[j] - 1.0); }
+        else            { let grad = append(grad, salida[j]); }
+        let j = j + 1;
+    }
+    // Calcular gradientes en orden inverso y acumular
+    let n_capas = len(capas);
+    // Primero calculamos todos los gradients en orden inverso
+    let gW_lista = [];
+    let gb_lista = [];
+    let idx = 0;
+    while (idx < n_capas) {
+        let i = (n_capas - 1) - idx;
+        let x_entrada = activaciones[i];
+        let W = capas[i]["W"];
+        let gradW = outer(grad, x_entrada);
+        let gradb = grad;
+        let grad_prev = Wt_dot(W, grad);
+        if (i > 0) {
+            let mask = relu_mascara(activaciones[i]);
+            let grad_prev = mult_elem(grad_prev, mask);
+        }
+        // Guardar en listas separadas (orden inverso)
+        let gW_lista = append(gW_lista, gradW);
+        let gb_lista = append(gb_lista, gradb);
+        let grad = grad_prev;
+        let idx = idx + 1;
+    }
+    // Invertir para que queden en orden capa 0..n-1
+    let grads_capas = [];
+    let k = 0;
+    while (k < n_capas) {
+        let ri = (n_capas - 1) - k;
+        let grads_capas = append(grads_capas, {gradW: gW_lista[ri], gradb: gb_lista[ri]});
+        let k = k + 1;
+    }
+    return grads_capas;
+}
+
+// Actualizar pesos de todas las capas con SGD
+func mlp_actualizar(capas, grads, lr) {
+    let nuevas_capas = [];
+    let i = 0;
+    while (i < len(capas)) {
+        let nuevo_W = actualizar_W(capas[i]["W"], grads[i]["gradW"], lr);
+        let nuevo_b = restar_vecs(capas[i]["b"], escalar_vec(lr, grads[i]["gradb"]));
+        let nuevas_capas = append(nuevas_capas, {W: nuevo_W, b: nuevo_b});
+        let i = i + 1;
+    }
+    return nuevas_capas;
+}
+
+// Cross-entropy loss para una muestra
+func cross_entropy_muestra(proba, y_int) {
+    let p = proba[y_int];
+    if (p < 0.0001) { let p = 0.0001; }
+    return -log(p);
+}
+
+// Convertir etiqueta a índice entero usando lista de clases
+func etiqueta_a_idx(clases, etiqueta) {
+    let i = 0;
+    while (i < len(clases)) {
+        if (clases[i] == etiqueta) { return i; }
+        let i = i + 1;
+    }
+    return 0;
+}
+
+// Crear modelo MLP
+// capas_sizes: lista de enteros con tamaño de cada capa oculta
+// Ej: mlp_crear([64, 32], 0.01, 100, 4, 3) para 4 features y 3 clases
+func mlp_crear(capas_sizes, lr, max_iter) {
+    return {tipo: "mlp", capas_sizes: capas_sizes, lr: lr,
+            max_iter: max_iter, capas: [], clases: [], hist: []};
+}
+
+func mlp_set_lr(modelo, nueva_lr) {
+    return {tipo: "mlp", capas_sizes: modelo["capas_sizes"], lr: nueva_lr,
+            max_iter: modelo["max_iter"], capas: modelo["capas"],
+            clases: modelo["clases"], hist: modelo["hist"]};
+}
+
+func mlp_get_lr(modelo) {
+    return modelo["lr"];
+}
+
+func mlp_entrenar(modelo, X, y) {
+    let clases      = unico(y);
+    let n_features  = len(X[0]);
+    let n_clases    = len(clases);
+    let lr          = modelo["lr"];
+    let max_iter    = modelo["max_iter"];
+    let sizes       = modelo["capas_sizes"];
+    // Construir arquitectura: [n_features] + sizes + [n_clases]
+    let dims = [n_features];
+    let k = 0;
+    while (k < len(sizes)) {
+        let dims = append(dims, sizes[k]);
+        let k = k + 1;
+    }
+    let dims = append(dims, n_clases);
+    // Inicializar capas (o reutilizar si ya existen)
+    let capas = modelo["capas"];
+    if (len(capas) == 0) {
+        let k = 0;
+        while (k < (len(dims) - 1)) {
+            let W = init_W(dims[k], dims[k + 1]);
+            let b = ceros_vec(dims[k + 1]);
+            let capas = append(capas, {W: W, b: b});
+            let k = k + 1;
+        }
+    }
+    // Entrenamiento por épocas
+    let hist = [];
+    let epoca = 0;
+    while (epoca < max_iter) {
+        let perdida_total = 0.0;
+        let i = 0;
+        while (i < len(X)) {
+            let y_int  = etiqueta_a_idx(clases, y[i]);
+            let fwd    = mlp_forward(capas, X[i]);
+            let proba  = fwd[0];
+            let acts   = fwd[1];
+            let loss   = cross_entropy_muestra(proba, y_int);
+            let perdida_total = perdida_total + loss;
+            let grads  = mlp_backward(capas, acts, y_int, n_clases);
+            let capas  = mlp_actualizar(capas, grads, lr);
+            let i = i + 1;
+        }
+        let hist = append(hist, perdida_total / len(X));
+        let epoca = epoca + 1;
+    }
+    return {tipo: "mlp", capas_sizes: modelo["capas_sizes"], lr: lr,
+            max_iter: max_iter, capas: capas, clases: clases, hist: hist};
+}
+
+func mlp_predecir_uno(modelo, x) {
+    let fwd   = mlp_forward(modelo["capas"], x);
+    let proba = fwd[0];
+    let idx   = argmax(proba);
+    return modelo["clases"][idx];
+}
+
+func mlp_predecir(modelo, X) {
+    let preds = [];
+    let i = 0;
+    while (i < len(X)) {
+        let preds = append(preds, mlp_predecir_uno(modelo, X[i]));
+        let i = i + 1;
+    }
+    return preds;
+}
+
+func mlp_puntaje(modelo, X, y) {
+    let preds = mlp_predecir(modelo, X);
+    let ok = 0;
+    let i = 0;
+    while (i < len(y)) {
+        if (preds[i] == y[i]) { let ok = ok + 1; }
+        let i = i + 1;
+    }
+    return ok / len(y);
+}
+
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SECCIÓN 6 — MÉTRICAS
+// ──────────────────────────────────────────────────────────────────────────────
+
+func exactitud(y_real, y_pred) {
+    let ok = 0;
+    let i = 0;
+    while (i < len(y_real)) {
+        if (y_real[i] == y_pred[i]) { let ok = ok + 1; }
+        let i = i + 1;
+    }
+    return ok / len(y_real);
+}
+
+func matriz_confusion(y_real, y_pred) {
+    let clases = unico(concat(y_real, y_pred));
+    let n = len(clases);
+    let mat = ceros(n, n);
+    let i = 0;
+    while (i < len(y_real)) {
+        let fila_idx = etiqueta_a_idx(clases, y_real[i]);
+        let col_idx  = etiqueta_a_idx(clases, y_pred[i]);
+        let fila = mat[fila_idx];
+        let nuevo_val = fila[col_idx] + 1;
+        let nueva_fila = fila.slice(0, col_idx);
+        let nueva_fila = append(nueva_fila, nuevo_val);
+        let nueva_fila = concat(nueva_fila, fila.slice(col_idx + 1, len(fila)));
+        let mat = reemplazar_fila(mat, fila_idx, nueva_fila);
+        let i = i + 1;
+    }
+    return {clases: clases, matriz: mat};
+}
+
+func reporte_clasificacion(y_real, y_pred) {
+    let clases = unico(y_real);
+    let precision_list = [];
+    let recall_list    = [];
+    let f1_list        = [];
+    let c = 0;
+    while (c < len(clases)) {
+        let cls = clases[c];
+        let tp = 0; let fp = 0; let fn = 0;
+        let i = 0;
+        while (i < len(y_real)) {
+            if (y_real[i] == cls && y_pred[i] == cls) { let tp = tp + 1; }
+            if (y_real[i] != cls && y_pred[i] == cls) { let fp = fp + 1; }
+            if (y_real[i] == cls && y_pred[i] != cls) { let fn = fn + 1; }
+            let i = i + 1;
+        }
+        let prec = 0.0;
+        let rec  = 0.0;
+        let f1   = 0.0;
+        if ((tp + fp) > 0) { let prec = tp / (tp + fp); }
+        if ((tp + fn) > 0) { let rec  = tp / (tp + fn); }
+        if ((prec + rec) > 0.0) { let f1 = 2.0 * prec * rec / (prec + rec); }
+        let precision_list = append(precision_list, prec);
+        let recall_list    = append(recall_list,    rec);
+        let f1_list        = append(f1_list,        f1);
+        let c = c + 1;
+    }
+    return {clases: clases, precision: precision_list,
+            recall: recall_list, f1: f1_list,
+            exactitud: exactitud(y_real, y_pred)};
+}

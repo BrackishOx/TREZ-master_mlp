@@ -1,0 +1,52 @@
+// test_dl.trez — operaciones de Deep Learning: Tensordoz, Metricsdoz, activaciones
+
+// ── Producto punto vectorial ───────────────────────────────────────────────
+let a = [1, 2, 3];
+let b = [4, 5, 6];
+mostrar(dot(a, b));              // 32
+mostrar(Tensordoz.dot(a, b));    // 32
+
+// ── Multiplicación matricial ───────────────────────────────────────────────
+let X = [[1, 2], [3, 4]];
+let Y = [[2, 0], [1, 2]];
+mostrar(dot(X, Y));              // [[4, 4], [10, 8]]
+mostrar(Tensordoz.dot(X, Y));    // [[4, 4], [10, 8]]
+
+// ── Matriz × vector ───────────────────────────────────────────────────────
+let W = [[0.5, 0.5], [0.1, 0.9]];
+let v = [1.0, 0.0];
+mostrar(Tensordoz.dot(W, v));    // [0.5, 0.1]
+
+// ── Transpose ─────────────────────────────────────────────────────────────
+mostrar(transpose(X));           // [[1, 3], [2, 4]]
+mostrar(Tensordoz.transpose(X)); // [[1, 3], [2, 4]]
+
+// ── Activaciones ──────────────────────────────────────────────────────────
+mostrar(sigmoid(0.5));                           // 0.622...
+mostrar(relu([-1, 0, 5, -3, 2]));               // [0, 0, 5, 0, 2]
+mostrar(Mathdoz.sigmoid(0));                    // 0.5
+mostrar(Mathdoz.relu(-5));                      // 0
+
+// ── Forward pass de una capa (manual) ────────────────────────────────────
+// salida = relu(W · x)
+let capa_W  = [[1.0, -1.0], [0.5, 0.5]];
+let entrada = [2.0, 3.0];
+let pre_act = Tensordoz.dot(capa_W, entrada);  // [-1.0, 2.5]
+mostrar(pre_act);
+let activado = relu(pre_act);
+mostrar(activado);   // [0, 2.5]
+
+// ── Pipe: forward pass encadenado ────────────────────────────────────────
+let forward = \x -> relu(Tensordoz.dot(capa_W, x));
+let salida  = entrada |> forward;
+mostrar(salida);   // [0, 2.5]
+
+// ── Métricas ──────────────────────────────────────────────────────────────
+let y_real = [0.0, 1.0, 0.5];
+let y_pred = [0.1, 0.9, 0.4];
+mostrar(Metricsdoz.mse(y_real, y_pred));       // ~0.01
+mostrar(Metricsdoz.mse_grad(y_real, y_pred));  // gradientes
+
+// ── Escalar × vector ──────────────────────────────────────────────────────
+mostrar(2 * [1, 2, 3]);    // [2, 4, 6]
+mostrar([1, 2, 3] + [4, 5, 6]);  // [5, 7, 9]

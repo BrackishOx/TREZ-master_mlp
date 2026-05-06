@@ -1,0 +1,36 @@
+Filas cargadas:
+10280
+Columnas:
+['id', 'edad', 'nivel_edu', 'ingreso_mensual', 'sex', 'anios_esc']
+Num columnas:
+6
+Primera fila:
+{'id': 1, 'edad': 56, 'nivel_edu': 'Secundaria completa', 'ingreso_mensual': 5375, 'sex': 'Mujer', 'anios_esc': 12}
+Total personas:
+10280
+Media de edad:
+39.73696498054475
+Media ingreso mensual:
+7362.385894941634
+Primaria incompleta:
+971
+Primaria completa:
+1823
+Secundaria completa:
+4151
+Medio superior y superior:
+3335
+Mujeres:
+3933
+Hombres:
+6347
+[Plotdoz] bar_chart guardado en: ../tests/grafica_nivel_edu.png
+../tests/grafica_nivel_edu.png
+[Plotdoz] histogram guardado en: ../tests/grafica_edades.png
+../tests/grafica_edades.png
+[Plotdoz] scatter guardado en: ../tests/grafica_scatter.png
+../tests/grafica_scatter.png
+Graficas generadas en tests/:
+  ../tests/grafica_nivel_edu.png
+  tests/grafica_edades.png
+  ../tests/grafica_scatter.png

@@ -1,0 +1,67 @@
+// test_euclides.trez — Algoritmo de Euclides para el MCD
+// Implementaciones: recursiva e iterativa
+
+// ── Version RECURSIVA ─────────────────────────────────────────────────────
+// Basada en: mcd(a, b) = mcd(b, a % b), caso base: mcd(a, 0) = a
+func mcd_recursivo(a, b) {
+    if (b == 0) { return a; }
+    return mcd_recursivo(b, a % b);
+}
+
+mostrar("=== MCD Recursivo ===");
+mostrar(mcd_recursivo(48, 18));    // 6
+mostrar(mcd_recursivo(100, 75));   // 25
+mostrar(mcd_recursivo(56, 98));    // 14
+mostrar(mcd_recursivo(17, 5));     // 1 (coprimos)
+mostrar(mcd_recursivo(0, 7));      // 7
+mostrar(mcd_recursivo(7, 0));      // 7
+mostrar(mcd_recursivo(12, 12));    // 12 (iguales)
+mostrar(mcd_recursivo(1071, 462)); // 21
+mostrar(mcd_recursivo(270, 192));  // 6
+
+// ── Version ITERATIVA ─────────────────────────────────────────────────────
+// Mismo algoritmo pero con ciclo while en lugar de recursion
+func mcd_iterativo(a, b) {
+    while (b != 0) {
+        let temp = b;
+        let b = a % b;
+        let a = temp;
+    }
+    return a;
+}
+
+mostrar("=== MCD Iterativo ===");
+mostrar(mcd_iterativo(48, 18));    // 6
+mostrar(mcd_iterativo(100, 75));   // 25
+mostrar(mcd_iterativo(56, 98));    // 14
+mostrar(mcd_iterativo(17, 5));     // 1 (coprimos)
+mostrar(mcd_iterativo(0, 7));      // 7
+mostrar(mcd_iterativo(7, 0));      // 7
+mostrar(mcd_iterativo(12, 12));    // 12 (iguales)
+mostrar(mcd_iterativo(1071, 462)); // 21
+mostrar(mcd_iterativo(270, 192));  // 6
+
+// ── Verificacion cruzada: ambas versiones deben coincidir ─────────────────
+mostrar("=== Verificacion cruzada ===");
+func verificar(a, b) {
+    let r = mcd_recursivo(a, b);
+    let i = mcd_iterativo(a, b);
+    if (r == i) { return "OK"; }
+    return "FALLO";
+}
+
+mostrar(verificar(360, 240));   // OK
+mostrar(verificar(1000, 600));  // OK
+mostrar(verificar(13, 7));      // OK
+mostrar(verificar(144, 89));    // OK (Fibonacci consecutivos — coprimos)
+
+// ── Aplicacion: MCM usando el MCD ─────────────────────────────────────────
+// mcm(a, b) = (a * b) / mcd(a, b)
+mostrar("=== MCM via MCD ===");
+func mcm(a, b) {
+    return (a * b) / mcd_recursivo(a, b);
+}
+
+mostrar(mcm(4, 6));     // 12.0
+mostrar(mcm(12, 15));   // 60.0
+mostrar(mcm(7, 3));     // 21.0

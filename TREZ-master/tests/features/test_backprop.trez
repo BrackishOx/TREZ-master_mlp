@@ -1,0 +1,37 @@
+// test_backprop.trez — métricas de pérdida y actualización de pesos (backprop manual)
+
+// ── MSE vía función global (compatibilidad) ───────────────────────────────
+let predicciones = [0.1, 0.9, 0.4];
+let reales       = [0.0, 1.0, 0.5];
+
+let error     = mse(reales, predicciones);
+let gradientes = mse_grad(reales, predicciones);
+mostrar(error);      // 0.009999999999999997
+mostrar(gradientes); // [0.066..., -0.066..., -0.066...]
+
+// ── MSE vía namespace Metricsdoz ──────────────────────────────────────────
+mostrar(Metricsdoz.mse(reales, predicciones));      // mismo valor
+mostrar(Metricsdoz.mse_grad(reales, predicciones)); // mismo gradiente
+
+// ── Actualización de pesos: W = W - lr * grad ─────────────────────────────
+let pesos = [0.5, 0.5, 0.5];
+let lr    = 0.1;
+let pesos_nuevos = pesos - lr * gradientes;
+mostrar(pesos_nuevos);  // pesos actualizados
+
+// ── Cross Entropy vía Metricsdoz ──────────────────────────────────────────
+// logits: salidas crudas de la red (antes de softmax)
+// targets: índice de la clase correcta
+let logits  = [[2.0, 1.0, 0.1], [0.5, 2.5, 0.3]];
+let targets = [0, 1];
+let ce_loss = Metricsdoz.cross_entropy(logits, targets);
+mostrar(ce_loss);  // ~0.3185
+
+let ce_grad = Metricsdoz.cross_entropy_grad(logits, targets);
+mostrar(len(ce_grad));      // 2  (un gradiente por muestra)
+mostrar(len(ce_grad[0]));   // 3  (uno por clase)
+
+// ── Pipe con métricas ─────────────────────────────────────────────────────
+let calcular_mse = \pred -> Metricsdoz.mse(reales, pred);
+let loss_pipe    = predicciones |> calcular_mse;
+mostrar(loss_pipe);  // 0.009999999999999997

@@ -1,0 +1,88 @@
+// test_lists.trez — listas, acceso, metodos, estructuras anidadas
+
+// ── Creacion y acceso ─────────────────────────────────────────────────────
+let nums = [10, 20, 30, 40, 50];
+mostrar(nums[0]);   // 10
+mostrar(nums[2]);   // 30
+mostrar(nums[4]);   // 50
+mostrar(len(nums)); // 5
+
+// ── head / tail ───────────────────────────────────────────────────────────
+mostrar(head(nums));   // 10
+mostrar(tail(nums));   // [20, 30, 40, 50]
+mostrar(head(tail(nums)));  // 20
+
+// ── append ────────────────────────────────────────────────────────────────
+let nums2 = append(nums, 60);
+mostrar(nums2);         // [10, 20, 30, 40, 50, 60]
+mostrar(len(nums2));    // 6
+mostrar(nums);          // [10, 20, 30, 40, 50] — original sin modificar
+
+// ── Metodos de lista ──────────────────────────────────────────────────────
+mostrar(nums.reverse());           // [50, 40, 30, 20, 10]
+mostrar(nums.slice(1, 4));         // [20, 30, 40]
+mostrar(nums.contains(30));        // True
+mostrar(nums.contains(99));        // False
+mostrar(nums.get(2));              // 30
+mostrar(nums.len());               // 5
+
+// ── Aritmetica vectorial ──────────────────────────────────────────────────
+let a = [1, 2, 3];
+let b = [4, 5, 6];
+mostrar(a + b);         // [5, 7, 9]
+mostrar(b - a);         // [3, 3, 3]
+mostrar(2 * a);         // [2, 4, 6]
+mostrar(a * 3);         // [3, 6, 9]
+
+// ── Lista vacia ───────────────────────────────────────────────────────────
+let vacia = [];
+mostrar(len(vacia));    // 0
+mostrar(vacia);         // []
+
+// ── Matrices 2D ───────────────────────────────────────────────────────────
+let mat = [[1, 2, 3], [4, 5, 6], [7, 8, 9]];
+mostrar(mat[0]);         // [1, 2, 3]
+mostrar(mat[1]);         // [4, 5, 6]
+mostrar(mat[2][2]);      // 9
+mostrar(mat[0][1]);      // 2
+
+// Transponer con la funcion nativa
+let t = transpose(mat);
+mostrar(t[0]);   // [1, 4, 7]
+mostrar(t[1]);   // [2, 5, 8]
+
+// ── Tensor 3D ─────────────────────────────────────────────────────────────
+let tensor3 = [[[1, 2], [3, 4]], [[5, 6], [7, 8]]];
+mostrar(tensor3[0]);         // [[1, 2], [3, 4]]
+mostrar(tensor3[1][0]);      // [5, 6]
+mostrar(tensor3[1][1][0]);   // 7
+
+// ── Listas mixtas anidadas ────────────────────────────────────────────────
+let mixed = [[1, 2], [3, 4], [5, 6]];
+for row in mixed {
+    let s = row[0] + row[1];
+    mostrar(s);
+}
+// 3  7  11
+
+// ── Producto punto y multiplicacion matricial ─────────────────────────────
+let v1 = [1, 2, 3];
+let v2 = [4, 5, 6];
+mostrar(dot(v1, v2));   // 32
+
+let m1 = [[1, 2], [3, 4]];
+let m2 = [[2, 0], [1, 2]];
+mostrar(dot(m1, m2));   // [[4, 4], [10, 8]]
+
+// ── Construccion funcional recursiva ─────────────────────────────────────
+func construir_rango(n) {
+    if (n <= 0) { return []; }
+    return append(construir_rango(n - 1), n);
+}
+mostrar(construir_rango(5));  // [1, 2, 3, 4, 5]
+
+func invertir(lst) {
+    if (len(lst) == 0) { return []; }
+    return append(invertir(tail(lst)), head(lst));
+}
+mostrar(invertir([1, 2, 3, 4]));  // [4, 3, 2, 1]

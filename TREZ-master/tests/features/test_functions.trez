@@ -1,0 +1,74 @@
+// test_functions.trez — funciones, recursion, closures, orden superior
+
+// Factorial recursivo
+func factorial(n) {
+    if (n <= 1) { return 1; }
+    return n * factorial(n - 1);
+}
+mostrar(factorial(0));   // 1
+mostrar(factorial(1));   // 1
+mostrar(factorial(5));   // 120
+mostrar(factorial(10));  // 3628800
+
+// Fibonacci recursivo
+func fibonacci(n) {
+    if (n <= 0) { return 0; }
+    if (n == 1) { return 1; }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+mostrar(fibonacci(0));   // 0
+mostrar(fibonacci(1));   // 1
+mostrar(fibonacci(7));   // 13
+mostrar(fibonacci(10));  // 55
+
+// Potencia recursiva
+func potencia(base, exp) {
+    if (exp == 0) { return 1; }
+    return base * potencia(base, exp - 1);
+}
+mostrar(potencia(2, 10));   // 1024
+mostrar(potencia(3, 4));    // 81
+
+// Suma acumulada recursiva sobre lista
+func suma_lista(lst) {
+    if (len(lst) == 0) { return 0; }
+    return head(lst) + suma_lista(tail(lst));
+}
+mostrar(suma_lista([]));          // 0
+mostrar(suma_lista([5]));         // 5
+mostrar(suma_lista([1,2,3,4,5])); // 15
+
+// Map recursivo — duplica cada elemento
+func map_doble(lst) {
+    if (len(lst) == 0) { return []; }
+    return append(map_doble(tail(lst)), head(lst) * 2);
+}
+mostrar(map_doble([1, 2, 3]));  // [6, 4, 2]
+
+// Filter recursivo — conserva solo positivos
+func filtrar_positivos(lst) {
+    if (len(lst) == 0) { return []; }
+    let h = head(lst);
+    let resto = filtrar_positivos(tail(lst));
+    if (h > 0) { return append([h], head(resto)); }
+    return resto;
+}
+
+// Funcion que retorna resultado de otra funcion
+func aplicar_dos_veces(x) {
+    return factorial(factorial(x));
+}
+mostrar(aplicar_dos_veces(3));  // factorial(factorial(3)) = factorial(6) = 720
+
+// Multiples parametros
+func hipotenusa(a, b) {
+    return sqrt(a * a + b * b);
+}
+mostrar(hipotenusa(3, 4));   // 5.0
+mostrar(hipotenusa(5, 12));  // 13.0
+
+// Funciones sin parametros
+func pi_aproximado() {
+    return 3.14159265358979;
+}
+mostrar(pi_aproximado());

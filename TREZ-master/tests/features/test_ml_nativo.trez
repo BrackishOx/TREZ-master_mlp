@@ -1,0 +1,166 @@
+// ═══════════════════════════════════════════════════════════════════════════
+// test_ml_nativo.trez — ML & DL implementado 100% en TREZ nativo
+//
+// Carga la librería ml.trez y prueba:
+//   KNN, Regresión Logística, Árbol de Decisión, MLP
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Cargar librería ML nativa
+usar("lib/ml.trez");
+
+// ── Dataset ───────────────────────────────────────────────────────────────────
+let X = [
+  [5.1, 3.5, 1.4, 0.2], [4.9, 3.0, 1.4, 0.2], [4.7, 3.2, 1.3, 0.2],
+  [5.0, 3.6, 1.4, 0.2], [5.4, 3.9, 1.7, 0.4], [4.6, 3.4, 1.4, 0.3],
+  [5.0, 3.4, 1.5, 0.2], [4.4, 2.9, 1.4, 0.2], [4.9, 3.1, 1.5, 0.1],
+  [5.4, 3.7, 1.5, 0.2],
+  [7.0, 3.2, 4.7, 1.4], [6.4, 3.2, 4.5, 1.5], [6.9, 3.1, 4.9, 1.5],
+  [5.5, 2.3, 4.0, 1.3], [6.5, 2.8, 4.6, 1.5], [5.7, 2.8, 4.5, 1.3],
+  [6.3, 3.3, 4.7, 1.6], [4.9, 2.4, 3.3, 1.0], [6.6, 2.9, 4.6, 1.3],
+  [5.2, 2.7, 3.9, 1.4],
+  [6.3, 3.3, 6.0, 2.5], [5.8, 2.7, 5.1, 1.9], [7.1, 3.0, 5.9, 2.1],
+  [6.3, 2.9, 5.6, 1.8], [6.5, 3.0, 5.8, 2.2], [7.6, 3.0, 6.6, 2.1],
+  [4.9, 2.5, 4.5, 1.7], [7.3, 2.9, 6.3, 1.8], [6.7, 2.5, 5.8, 1.8],
+  [7.2, 3.6, 6.1, 2.5]
+];
+let y = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+  2, 2, 2, 2, 2, 2, 2, 2, 2, 2
+];
+
+// Split manual 80/20
+let X_train = X.slice(0, 24);
+let y_train = y.slice(0, 24);
+let X_test  = X.slice(24, 30);
+let y_test  = y.slice(24, 30);
+
+mostrar("══════════════════════════════════════════");
+mostrar("  ML Nativo en TREZ — Comparación");
+mostrar("══════════════════════════════════════════");
+mostrar("Muestras entrenamiento:");
+mostrar(len(X_train));
+mostrar("Muestras prueba:");
+mostrar(len(X_test));
+
+
+// ── 1. K-VECINOS MÁS CERCANOS ────────────────────────────────────────────────
+mostrar("--- KNN (k=3) ---");
+let knn = knn_crear(3);
+let knn = knn_entrenar(knn, X_train, y_train);
+let acc_knn = knn_puntaje(knn, X_test, y_test);
+mostrar("Exactitud KNN k=3:");
+mostrar(acc_knn);
+
+// Cambiar k
+let knn = knn_set_k(knn, 5);
+mostrar("k cambiado a:");
+mostrar(knn_get_k(knn));
+let acc_knn5 = knn_puntaje(knn, X_test, y_test);
+mostrar("Exactitud KNN k=5:");
+mostrar(acc_knn5);
+
+// Predicciones
+let preds_knn = knn_predecir(knn, X_test);
+mostrar("Predicciones KNN:");
+mostrar(preds_knn);
+mostrar("Etiquetas reales:");
+mostrar(y_test);
+
+
+// ── 2. REGRESIÓN LOGÍSTICA (Gradiente Descendente) ───────────────────────────
+mostrar("--- Regresión Logística (lr=0.1, 50 épocas) ---");
+let logreg = logreg_crear(0.1, 50);
+mostrar("lr inicial:");
+mostrar(logreg_get_lr(logreg));
+
+let logreg = logreg_entrenar(logreg, X_train, y_train);
+let acc_lr = logreg_puntaje(logreg, X_test, y_test);
+mostrar("Exactitud LogReg:");
+mostrar(acc_lr);
+
+// Cambiar tasa de aprendizaje y re-entrenar
+let logreg = logreg_set_lr(logreg, 0.01);
+mostrar("lr después de cambio:");
+mostrar(logreg_get_lr(logreg));
+let logreg = logreg_entrenar(logreg, X_train, y_train);
+let acc_lr2 = logreg_puntaje(logreg, X_test, y_test);
+mostrar("Exactitud LogReg (lr=0.01):");
+mostrar(acc_lr2);
+
+let preds_lr = logreg_predecir(logreg, X_test);
+mostrar("Predicciones LogReg:");
+mostrar(preds_lr);
+
+
+// ── 3. ÁRBOL DE DECISIÓN ─────────────────────────────────────────────────────
+mostrar("--- Árbol de Decisión (max_prof=4, min_muestras=2) ---");
+let arbol = arbol_crear(4, 2);
+let arbol = arbol_entrenar(arbol, X_train, y_train);
+let acc_arbol = arbol_puntaje(arbol, X_test, y_test);
+mostrar("Exactitud Árbol:");
+mostrar(acc_arbol);
+
+let preds_arbol = arbol_predecir(arbol, X_test);
+mostrar("Predicciones Árbol:");
+mostrar(preds_arbol);
+
+
+// ── 4. PERCEPTRÓN MULTICAPA (MLP) ────────────────────────────────────────────
+mostrar("--- MLP ([8], lr=0.01, 30 épocas) ---");
+let mlp = mlp_crear([8], 0.01, 30);
+mostrar("lr inicial MLP:");
+mostrar(mlp_get_lr(mlp));
+
+let mlp = mlp_entrenar(mlp, X_train, y_train);
+let acc_mlp = mlp_puntaje(mlp, X_test, y_test);
+mostrar("Exactitud MLP:");
+mostrar(acc_mlp);
+
+// Fine-tuning: cambiar lr y re-entrenar
+let mlp = mlp_set_lr(mlp, 0.001);
+mostrar("lr MLP después de cambio:");
+mostrar(mlp_get_lr(mlp));
+let mlp = mlp_entrenar(mlp, X_train, y_train);
+let acc_mlp2 = mlp_puntaje(mlp, X_test, y_test);
+mostrar("Exactitud MLP (fine-tuning):");
+mostrar(acc_mlp2);
+
+let preds_mlp = mlp_predecir(mlp, X_test);
+mostrar("Predicciones MLP:");
+mostrar(preds_mlp);
+
+// Historial de pérdida (últimas 5 épocas)
+let hist = mlp["hist"];
+mostrar("Pérdidas finales MLP:");
+mostrar(hist[len(hist) - 1]);
+
+
+// ── 5. MÉTRICAS COMPLETAS ────────────────────────────────────────────────────
+mostrar("══════════════════════════════════════════");
+mostrar("  Resumen Exactitudes");
+mostrar("══════════════════════════════════════════");
+mostrar("KNN:");
+mostrar(acc_knn5);
+mostrar("Regresión Logística:");
+mostrar(acc_lr2);
+mostrar("Árbol de Decisión:");
+mostrar(acc_arbol);
+mostrar("MLP:");
+mostrar(acc_mlp2);
+
+mostrar("--- Matriz de Confusión (Árbol) ---");
+let conf = matriz_confusion(y_test, preds_arbol);
+mostrar(conf["clases"]);
+mostrar(conf["matriz"]);
+
+mostrar("--- Reporte de Clasificación (MLP) ---");
+let rep = reporte_clasificacion(y_test, preds_mlp);
+mostrar("Exactitud:");
+mostrar(rep["exactitud"]);
+mostrar("Precisión por clase:");
+mostrar(rep["precision"]);
+mostrar("Recall por clase:");
+mostrar(rep["recall"]);
+mostrar("F1 por clase:");
+mostrar(rep["f1"]);

@@ -1,0 +1,39 @@
+// test_runtime_errors.trez — errores de ejecucion esperados
+// Ejecutar uno a la vez descomentando la linea que se quiere probar.
+// Cada uno debe terminar con un mensaje de error claro.
+
+// ── 1. Variable no definida ───────────────────────────────────────────────
+// variable_inexistente;
+
+// ── 2. Division por cero ──────────────────────────────────────────────────
+// let x = 10 / 0;
+
+// ── 3. dot() con dimensiones incompatibles ────────────────────────────────
+let a = [1, 2, 3];
+let b = [4, 5];
+let err = dot(a, b);
+
+// ── 4. Indice fuera de rango ──────────────────────────────────────────────
+// let lst = [1, 2, 3];
+// let oob = lst[10];
+
+// ── 5. Funcion con argumentos incorrectos ────────────────────────────────
+// func f(x, y) { return x + y; }
+// f(1);
+
+// ── 6. head() en lista vacia ──────────────────────────────────────────────
+// head([]);
+
+// ── 7. Queue dequeue vacia ────────────────────────────────────────────────
+// let q = Queue();
+// q.dequeue();
+
+// ── 8. Stack pop vacio ────────────────────────────────────────────────────
+// let s = Stack();
+// s.pop();
+
+// ── 9. sqrt negativo ──────────────────────────────────────────────────────
+// sqrt(-1);
+
+// ── 10. log(0) ───────────────────────────────────────────────────────────
+// log(0);
